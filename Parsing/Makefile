@@ -1,13 +1,7 @@
-# Makefile simple cross compiler example for learning
-# see Elliot Williams write up
-# http://hackaday.com/2016/03/15/embed-with-elliot-microcontroller-makefiles
-# https://en.wikipedia.org/wiki/Make_%28software%29
-# http://ix.io/seE
-#
-# to see the implicit rules which automagicly turn blinkLED.c into blinkLED.o run
-# make -p
-TARGET = blinkLED
-OBJECTS = main.o
+# Makefile 
+TARGET = Parsing
+LIBDIR = ../lib
+OBJECTS = main.o $(LIBDIR)/uart.o $(LIBDIR)/parse.o
 
 ## Chip and project-specific global definitions
 MCU   =  atmega1284p
@@ -48,17 +42,15 @@ $(TARGET).hex: $(TARGET).elf
 ## dragon: -c dragon_isp -P usb
 ## to reduce dupliction I only show the fuse setting in ../Bootloader
 
-## lock the bootloader section after flashing, it does not stop isp when bootloader is not used
+## Program with an ISP. locking the bootloader section, is a good idea even if it is not used
 isp: $(TARGET).hex
 	avrdude -v -p $(MCU) -c stk500v1 -P $(ISP_PORT) -b 19200 -e -U flash:w:$(TARGET).hex -U lock:w:0x2f:m
 
-## works with xboot_avr109_irrigate7.hex bootloader.
-## stk500v2: erase command isn't supported use -D to disable auto erase, 
-##            see https://github.com/sudar/Arduino-Makefile/issues/114
-## arduino: optiboot will always auto erase, it may fail if told to do so e.g. do not use -e, 
+## arduino: optiboot will auto erase -e, and produces fake flags for safemode to check, 
 ## avr109: xboot wants to see the erase command -e and needs safemode fuse checking disabled -u
 bootload: $(TARGET).hex
-	avrdude -p $(MCU) -c avr109 -P $(BOOT_PORT) -b 115200 -e -u -U flash:w:$(TARGET).hex
+	avrdude -v -p $(MCU) -c avr109 -P $(BOOT_PORT) -b 115200 -e -u -U flash:w:$(TARGET).hex
+###avrdude -v -p $(MCU) -c arduino -P $(BOOT_PORT) -b 115200 -U flash:w:$(TARGET).hex
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@

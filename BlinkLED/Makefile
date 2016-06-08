@@ -53,9 +53,12 @@ isp: $(TARGET).hex
 	avrdude -v -p $(MCU) -c stk500v1 -P $(ISP_PORT) -b 19200 -e -U flash:w:$(TARGET).hex -U lock:w:0x2f:m
 
 ## works with xboot_avr109_irrigate7.hex bootloader.
-## -D disable auto erase, see https://github.com/sudar/Arduino-Makefile/issues/114
+## stk500v2: erase command isn't supported use -D to disable auto erase, 
+##            see https://github.com/sudar/Arduino-Makefile/issues/114
+## arduino: optiboot will always auto erase, it may fail if told to do so e.g. do not use -e, 
+## avr109: xboot wants to see the erase command -e and needs safemode fuse checking disabled -u
 bootload: $(TARGET).hex
-	avrdude -p $(MCU) -c avr109 -P $(BOOT_PORT) -b 115200 -e -U flash:w:$(TARGET).hex
+	avrdude -p $(MCU) -c avr109 -P $(BOOT_PORT) -b 115200 -e -u -U flash:w:$(TARGET).hex
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@

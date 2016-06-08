@@ -20,7 +20,7 @@ avr-size blinkLED.elf
 rm -f blinkLED.o main.o
 avr-objcopy -j .text -j .data -O ihex blinkLED.elf blinkLED.hex
 rm -f blinkLED.elf
-avrdude -p atmega1284p -c avr109 -P /dev/ttyUSB0 -b 115200 -e -U flash:w:blinkLED.hex
+avrdude -p atmega1284p -c avr109 -P /dev/ttyUSB0 -b 115200 -e -u -U flash:w:blinkLED.hex
 
 Connecting to programmer: .
 Found programmer: Id = "XBoot++"; type = S
@@ -54,8 +54,6 @@ Reading | ################################################## | 100% 0.03s
 
 avrdude: verifying ...
 avrdude: 212 bytes of flash verified
-
-avrdude: safemode: Sorry, reading back fuses was unreliable. I have given up and exited programming mode
 
 avrdude done.  Thank you.
 ``` 

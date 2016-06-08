@@ -44,18 +44,18 @@ $(TARGET).hex: $(TARGET).elf
 	rm -f $(TARGET).elf
 
 # http://eleccelerator.com/fusecalc/fusecalc.php?chip=atmega1284p&LOW=F7&HIGH=D6&EXTENDED=FD&LOCKBIT=2F
-## stk500v1 is for Arduino as ISP (e.g. it is an example in the Arduino.cc IDE 1.6.7+)
-## lock is from optiboot's Makefile.isp, If I understand it then overwriting an existing bootloader requires two steps
-fuse: 
-	avrdude -v -p $(MCU) -c stk500v1 -P $(ISP_PORT) -b 19200 -e -U lock:w:0x3f:m -U lfuse:w:0xF7:m -U hfuse:w:0xD6:m -U efuse:w:0xFD:m
+## Arduino as ISP (e.g. it is an example in the Arduino.cc IDE 1.6.7+): -c stk500v1 -P /dev/ttyACM0
+## dragon: -c dragon_isp -P usb
+## to reduce dupliction I only show the fuse setting in ../Bootloader
 
 ## lock the bootloader section after flashing, it does not stop isp when bootloader is not used
 isp: $(TARGET).hex
 	avrdude -v -p $(MCU) -c stk500v1 -P $(ISP_PORT) -b 19200 -e -U flash:w:$(TARGET).hex -U lock:w:0x2f:m
 
-## works with optiboot which erases flash without being told (e.g. -e )
+## works with xboot_avr109_irrigate7.hex bootloader.
+## -D disable auto erase, see https://github.com/sudar/Arduino-Makefile/issues/114
 bootload: $(TARGET).hex
-	avrdude -v -p $(MCU) -c arduino -P $(BOOT_PORT) -b 115200 -U flash:w:$(TARGET).hex
+	avrdude -p $(MCU) -c avr109 -P $(BOOT_PORT) -b 115200 -e -U flash:w:$(TARGET).hex
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@

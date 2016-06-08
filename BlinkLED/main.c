@@ -17,7 +17,7 @@ int main(void)
     {
         DigitalWrite(13,HIGH);
         //b7_high;
-        _delay_ms(1000);
+        _delay_ms(4000);
         DigitalWrite(13,LOW);
         //b7_low;
         _delay_ms(1000);

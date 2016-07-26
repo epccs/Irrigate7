@@ -1,9 +1,12 @@
 # Makefile 
-TARGET = Uart
+TARGET = Adc
 LIBDIR = ../lib
 OBJECTS = main.o \
-	id.o \
+	analog.o \
+	../Uart/id.o \
+	$(LIBDIR)/timers.o \
 	$(LIBDIR)/uart.o \
+	$(LIBDIR)/adc.o \
 	$(LIBDIR)/parse.o
 
 ## Chip and project-specific global definitions
@@ -32,6 +35,10 @@ TARGET_ARCH = -mmcu=$(MCU)
 LDFLAGS = -Wl,-Map,$(TARGET).map 
 LDFLAGS += -Wl,--gc-sections 
 
+## printf() is one of the vfprintf() family of functions which does not implement floating point conversion by default
+## warning this takes about 2k of program space
+LDFLAGS += -Wl,-u,vfprintf -lprintf_flt -lm
+
 all: $(TARGET).hex
 
 $(TARGET): $(TARGET).hex
@@ -40,12 +47,11 @@ $(TARGET).hex: $(TARGET).elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
 	rm -f $(TARGET).elf
 
-# http://eleccelerator.com/fusecalc/fusecalc.php?chip=atmega1284p&LOW=F7&HIGH=D6&EXTENDED=FD&LOCKBIT=2F
-## Arduino as ISP (e.g. it is an example in the Arduino.cc IDE 1.6.7+): -c stk500v1 -P /dev/ttyACM0
-## dragon: -c dragon_isp -P usb
+## http://eleccelerator.com/fusecalc/fusecalc.php?chip=atmega328p&LOW=FF&HIGH=DE&EXTENDED=05&LOCKBIT=2F
+## stk500v1 is for Arduino as ISP (e.g. it is an example in the Arduino.cc IDE 1.6.7+)
 ## to reduce dupliction I only show the fuse setting in ../Bootloader
 
-## Program with an ISP. locking the bootloader section, is a good idea even if it is not used
+## 328p can lock the bootloader section, which is a good idea even if it is not used
 isp: $(TARGET).hex
 	avrdude -v -p $(MCU) -c stk500v1 -P $(ISP_PORT) -b 19200 -e -U flash:w:$(TARGET).hex -U lock:w:0x2f:m
 

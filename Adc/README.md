@@ -1,40 +1,41 @@
-# AVR  Interrupt-Driven UART with stdio redirect
+# Analog-to-Digital Converter
 
 ## Overview
 
-Uart is an interactive command line program that demonstrates stdio redirect of an interrupt-driven UART. 
+Adc is an interactive command line program that demonstrates control of an ATmega1284p Analog-to-Digital Converter from pins PA0 through PA7. 
 
-Referance ATmega1284P datasheet 19. USART Universal Synchronous and Asynchronous serial Receiver and Transmitter.
+The ADMUX values are somtimes confused with the pins but in this caser A0 is in fact on pin PA0 (A1 is on PA1, and so on). 
 
 For how I setup my Makefile toolchain <http://epccs.org/indexes/Document/DvlpNotes/LinuxBoxCrossCompiler.html>.
 
-Minimalized Interrupt-driven UART code
-
-With a serial port connection (set the BOOT_PORT in Makefile) and xboot installed on the Irrigate7 run 'make bootload' and it should compile and then flash the MCU.
+With a serial port connection (set the BOOT_PORT in Makefile) and optiboot installed on the RPUno run 'make bootload' and it should compile and then flash the MCU.
 
 ``` 
-rsutherland@conversion:~/Samba/Irrigate7/Uart$ make bootload
+rsutherland@conversion:~/Samba/RPUno/Adc$ make bootload
 avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o main.o main.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o id.o id.c
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o analog.o analog.c
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../Uart/id.o ../Uart/id.c
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/timers.o ../lib/timers.c
 avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/uart.o ../lib/uart.c
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/adc.o ../lib/adc.c
 avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/parse.o ../lib/parse.c
-avr-gcc -Wl,-Map,Uart.map  -Wl,--gc-sections  -mmcu=atmega1284p main.o id.o ../lib/uart.o ../lib/parse.o -o Uart.elf
-avr-size -C Uart.elf
+avr-gcc -Wl,-Map,Adc.map  -Wl,--gc-sections  -Wl,-u,vfprintf -lprintf_flt -lm -mmcu=atmega1284p main.o analog.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/adc.o ../lib/parse.o -o Adc.elf
+avr-size -C --mcu=atmega1284p Adc.elf
 AVR Memory Usage
 ----------------
-Device: Unknown
+Device: atmega1284p
 
-Program:    4612 bytes
+Program:    8386 bytes (6.4% Full)
 (.text + .data + .bootloader)
 
-Data:        145 bytes
+Data:        180 bytes (1.1% Full)
 (.data + .bss + .noinit)
 
 
-rm -f Uart.o main.o id.o ../lib/uart.o ../lib/parse.o
-avr-objcopy -j .text -j .data -O ihex Uart.elf Uart.hex
-rm -f Uart.elf
-avrdude -v -p atmega1284p -c avr109 -P /dev/ttyUSB0 -b 115200 -e -u -U flash:w:Uart.hex
+rm -f Adc.o main.o analog.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/adc.o ../lib/parse.o
+avr-objcopy -j .text -j .data -O ihex Adc.elf Adc.hex
+rm -f Adc.elf
+avrdude -v -p atmega1284p -c avr109 -P /dev/ttyUSB0 -b 115200 -e -u -U flash:w:Adc.hex
 
 avrdude: Version 6.2
          Copyright (c) 2000-2005 Brian Dean, http://www.bdmicro.com/
@@ -95,23 +96,23 @@ Reading | ################################################## | 100% 0.00s
 
 avrdude: Device signature = 0x1e9705 (probably m1284p)
 avrdude: erasing chip
-avrdude: reading input file "Uart.hex"
-avrdude: input file Uart.hex auto detected as Intel Hex
-avrdude: writing flash (4612 bytes):
+avrdude: reading input file "Adc.hex"
+avrdude: input file Adc.hex auto detected as Intel Hex
+avrdude: writing flash (8386 bytes):
 
-Writing | ################################################## | 100% 0.67s
+Writing | ################################################## | 100% 1.15s
 
-avrdude: 4612 bytes of flash written
-avrdude: verifying flash memory against Uart.hex:
-avrdude: load data flash data from input file Uart.hex:
-avrdude: input file Uart.hex auto detected as Intel Hex
-avrdude: input file Uart.hex contains 4612 bytes
+avrdude: 8386 bytes of flash written
+avrdude: verifying flash memory against Adc.hex:
+avrdude: load data flash data from input file Adc.hex:
+avrdude: input file Adc.hex auto detected as Intel Hex
+avrdude: input file Adc.hex contains 8386 bytes
 avrdude: reading on-chip flash data:
 
-Reading | ################################################## | 100% 0.50s
+Reading | ################################################## | 100% 0.83s
 
 avrdude: verifying ...
-avrdude: 4612 bytes of flash verified
+avrdude: 8386 bytes of flash verified
 
 avrdude done.  Thank you.
 ``` 
@@ -123,6 +124,13 @@ Now connect with picocom (or ilk). Note I am often at another computer doing thi
 picocom -b 115200 /dev/ttyUSB0
 ``` 
 
+or log the terminal session
+
+``` 
+script -f -c "picocom -b 115200 /dev/ttyUSB0" stuff.log
+``` 
+
+
 # Commands
 
 Commands are interactive over the serial interface at 115200 baud rate. The echo will start after second charactor of a new line. 
@@ -133,5 +141,16 @@ identify
 
 ``` 
 /0/id?
-{"id":{"name":"Uart","desc":"Irrigate7 Board /w atmega1284p and LT3652","avr-gcc":"4.9"}}
+{"id":{"name":"Adc","desc":"Irrigate7 Board /w atmega1284p and LT3652","avr-gcc":"4.9"}}
+```
+
+##  /0/analog? 0..7[,0..7[,0..7[,0..7[,0..7]]]]    
+
+Analog-to-Digital Converter reading from up to 5 ADMUX channels. The reading repeats until the Rx buffer gets a character. On Irrigate7 channel 5 is the solenoid boost converter, channel 6 is the solar input voltage, and channel 7 is the battery voltage.
+
 ``` 
+/0/analog? 5,6,7
+{"BOOST":"4.68","PV_IN":"18.21","PWR":"6.78"}
+{"BOOST":"4.68","PV_IN":"18.21","PWR":"6.78"}
+{"BOOST":"4.68","PV_IN":"18.21","PWR":"6.78"}
+```

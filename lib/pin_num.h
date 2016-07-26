@@ -117,7 +117,7 @@ void BitWriteSafe(volatile uint8_t* register_addr, uint8_t bit_offset, bool valu
 
 /* read value from pin number */
 static inline __attribute__((always_inline))
-bool DigitalRead(uint8_t pin_num) 
+bool digitalRead(uint8_t pin_num) 
 {
     badPinCheck(pin_num);
     return (*pinMap[pin_num].pin >> pinMap[pin_num].bit) & 1;
@@ -125,7 +125,7 @@ bool DigitalRead(uint8_t pin_num)
 
 /* toggle pin number  */
 static inline __attribute__((always_inline))
-void DigitalToggle(uint8_t pin) {
+void digitalToggle(uint8_t pin) {
   badPinCheck(pin);
   if ( pinMap[pin].pin > ((uint8_t*)0X5F) ) {
     // must write bit to high address port
@@ -138,23 +138,17 @@ void DigitalToggle(uint8_t pin) {
 
 /* set pin value */
 static inline __attribute__((always_inline))
-void DigitalWrite(uint8_t pin_num, bool value_for_bit) {
+void digitalWrite(uint8_t pin_num, bool value_for_bit) {
   badPinCheck(pin_num);
   BitWriteSafe(pinMap[pin_num].port, pinMap[pin_num].bit, value_for_bit);
 }
 
 /* set pin mode INPUT and OUTPUT */
 static inline __attribute__((always_inline))
-void PinMode(uint8_t pin_num, bool output_mode) {
+void pinMode(uint8_t pin_num, bool output_mode) {
   badPinCheck(pin_num);
   BitWriteSafe(pinMap[pin_num].ddr, pinMap[pin_num].bit, output_mode);
 }
 
-/* set both mode and value, note INPUT mode and high/low value will enable/disable the pin's pull-up */
-static inline __attribute__((always_inline))
-void PinConfig(uint8_t pin_num, bool output_mode, bool value_for_bit) {
-  PinMode(pin_num, output_mode);
-  DigitalWrite(pin_num, value_for_bit);
-}
 #endif  // DigitalPin_h
 

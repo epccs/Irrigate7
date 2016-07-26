@@ -11,14 +11,14 @@ int main(void)
 {
 	// Irrigat7 has no LED, but PB7 is wired to pin 13 on header.
     //b7_output;
-    PinMode(13,OUTPUT);
+    pinMode(13,OUTPUT);
     
     while (1) 
     {
-        DigitalWrite(13,HIGH);
+        digitalWrite(13,HIGH);
         //b7_high;
         _delay_ms(4000);
-        DigitalWrite(13,LOW);
+        digitalWrite(13,LOW);
         //b7_low;
         _delay_ms(1000);
     }    

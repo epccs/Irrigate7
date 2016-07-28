@@ -1,5 +1,5 @@
 /*
-Adc is a command line controled demonstration of Interrupt Driven Analog Conversion
+Eeprom is a command line controled demonstration of the control of an ATmega328p EEPROM
 Copyright (C) 2016 Ronald Sutherland
 
 This program is free software; you can redistribute it and/or
@@ -22,26 +22,26 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "../lib/timers.h"
 #include "../lib/adc.h"
 #include "../Uart/id.h"
-#include "analog.h"
-
-// running the ADC burns power, which can be saved by delaying its use
-#define ADC_DELAY_MILSEC 10000
-static unsigned long adc_started_at;
+#include "ee.h"
 
 void ProcessCmd()
 { 
     if ( (strcmp_P( command, PSTR("/id?")) == 0) && ( (arg_count == 0) || (arg_count == 1)) )
     {
-        Id("Adc");
+        Id("Eeprom");
     }
-    if ( (strcmp_P( command, PSTR("/analog?")) == 0) && ( (arg_count >= 1 ) && (arg_count <= 5) ) )
+    if ( (strcmp_P( command, PSTR("/ee?")) == 0) && (arg_count == 1 ) )
     {
-        Analog();
+        EEread();
+    }
+    if ( (strcmp_P( command, PSTR("/ee")) == 0) && (arg_count == 2 ) )
+    {
+        EEwrite();
     }
 }
 
 int main(void) 
-{
+{    
     // Initialize Timers, ADC, and clear bootloader, Arduino does these with init() in wiring.c 
     initTimers(); //Timer0 Fast PWM mode, Timer1 & Timer2 Phase Correct PWM mode.
     init_ADC_single_conversion(EXTERNAL_AVCC); // warning AREF should only have a bypass cap
@@ -49,10 +49,8 @@ int main(void)
     
     // setup()
 
-    // put ADC in Auto Trigger mode and fetch an array of channels
+    // put ADC in Auto Trigger mode and clear the memory array used to hold each channels conversion
     enable_ADC_auto_conversion();
-    adc_started_at = millis();
-    
     
     /* Initialize UART, it returns a pointer to FILE so redirect of stdin and stdout works*/
     stdout = stdin = uartstream0_init(BAUD);
@@ -65,8 +63,6 @@ int main(void)
     // loop() 
     while(1) /* I am tyring to use non-blocking code */
     { 
-        unsigned long kRuntime;
-        
         // check if character is available to assemble a command, e.g. non-blocking
         if ( (!command_done) && uart0_available() ) // command_done is an extern from parse.h
         {
@@ -86,14 +82,6 @@ int main(void)
             uart0_flush(); 
             initCommandBuffer();
         }
-        
-        // delay between ADC reading
-        kRuntime= millis() - adc_started_at;
-        if ((kRuntime) > ((unsigned long)ADC_DELAY_MILSEC))
-        {
-            enable_ADC_auto_conversion();
-            adc_started_at = millis();
-        } 
         
         // finish echo of the command line befor starting a reply (or the next part of a reply)
         if ( command_done && (uart0_availableForWrite() == UART_TX0_BUFFER_SIZE) )

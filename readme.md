@@ -13,5 +13,5 @@ The Board is an ATmega1284p with an LT3652 solar charge controller and Arduino U
 
 [Irrigate7](http://epccs.org/indexes/Board/Irrigate7/) Board development and hardware.
 
-This repository uses Makefiles with the following toolchain <http://epccs.org/indexes/Document/DvlpNotes/LinuxBoxCrossCompiler.html>. 
+This repository uses Makefiles. The toolchain setup is <http://epccs.org/indexes/Document/DvlpNotes/LinuxBoxCrossCompiler.html>. 
 

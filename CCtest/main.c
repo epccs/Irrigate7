@@ -22,21 +22,21 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "../lib/timers.h"
 #include "../lib/adc.h"
 #include "../Uart/id.h"
-#include "analog.h"
+#include "cctest.h"
 
 // running the ADC burns power, which can be saved by delaying its use
-#define ADC_DELAY_MILSEC 10000
+#define ADC_DELAY_MILSEC 250
 static unsigned long adc_started_at;
 
 void ProcessCmd()
 { 
     if ( (strcmp_P( command, PSTR("/id?")) == 0) && ( (arg_count == 0) || (arg_count == 1)) )
     {
-        Id("Adc");
+        Id("CCtest");
     }
-    if ( (strcmp_P( command, PSTR("/analog?")) == 0) && ( (arg_count >= 1 ) && (arg_count <= 5) ) )
+    if ( (strcmp_P( command, PSTR("/cctest?")) == 0) && (arg_count == 0) )
     {
-        Analog();
+        CCtest();
     }
 }
 
@@ -61,6 +61,15 @@ int main(void)
     initCommandBuffer();
 
     sei(); // Enable global interrupts starts TIMER0, UART0, ADC and any other ISR's
+    
+    // this start up command should run cctest, e.g. after a reset.
+    if (uart0_available() == 0)
+    {
+        strcpy_P(command_buf, PSTR("/0/cctest?"));
+        command_done = 1;
+        echo_on = 1;
+        printf_P(PSTR("%s\r\n"), command_buf);
+    }
     
     // loop() 
     while(1) /* I am tyring to use non-blocking code */

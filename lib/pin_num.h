@@ -68,7 +68,7 @@ static const Pin_Map pinMap[NUM_DIGITAL_PINS] = {
     [5] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB4 }, // OC0B/!SS [board; enable selectable current loops]
     [14] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB5 }, // ICP3/MOSI [board; flow meter pulse input]
     [12] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB6 }, // OC3A/MISO [board; IO12_/SUMP]
-    [13] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB7 }, // OC3B [board; IO13_/PUMP]
+    [13] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB7 }, // OC3B/SCK [board; IO13_/PUMP]
     [21] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC0 }, // SCL [shield]
     [20] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC1 }, // SDA [shield]
     [19] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC2 }, // TCK [board; shutdown solar charge control]
@@ -136,7 +136,7 @@ void digitalToggle(uint8_t pin) {
   }
 }
 
-/* set pin value */
+/* set pin value LOW and HIGH */
 static inline __attribute__((always_inline))
 void digitalWrite(uint8_t pin_num, bool value_for_bit) {
   badPinCheck(pin_num);

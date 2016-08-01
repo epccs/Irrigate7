@@ -17,6 +17,8 @@ http://www.gnu.org/licenses/gpl-2.0.html
 */
 #include <avr/pgmspace.h>
 #include <util/atomic.h>
+#include "../lib/pin_num.h"
+#include "../lib/pins_board.h"
 #include "../lib/uart.h"
 #include "../lib/parse.h"
 #include "../lib/timers.h"
@@ -30,11 +32,11 @@ static unsigned long adc_started_at;
 
 void ProcessCmd()
 { 
-    if ( (strcmp_P( command, PSTR("/id?")) == 0) && ( (arg_count == 0) || (arg_count == 1)) )
+    if ( (strcmp_P( command, PSTR("/id?")) == 0) && ( (arg_count == 0) || (arg_count == 1) ) )
     {
         Id("CCtest");
     }
-    if ( (strcmp_P( command, PSTR("/cctest?")) == 0) && (arg_count == 0) )
+    if ( (strcmp_P( command, PSTR("/cctest?")) == 0) && ( (arg_count == 0) || (arg_count == 1) || (arg_count == 3) ) )
     {
         CCtest();
     }
@@ -49,6 +51,9 @@ int main(void)
     
     // setup()
 
+    // Set LDx pins as output to control load
+    init_load();
+    
     // put ADC in Auto Trigger mode and fetch an array of channels
     enable_ADC_auto_conversion();
     adc_started_at = millis();
@@ -94,6 +99,12 @@ int main(void)
             // dump the transmit buffer to limit a collision 
             uart0_flush(); 
             initCommandBuffer();
+            
+            //Enable the LT3652, which may have been turned off
+            digitalWrite(SHUTDOWN, LOW);
+            
+            // trun off the load
+            load_step(0);
         }
         
         // delay between ADC reading

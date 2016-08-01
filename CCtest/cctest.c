@@ -28,25 +28,34 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "cctest.h"
 
 #define LDTST_PRINT_DELAY_MILSEC 2000
-#define RUNTST_PRINT_DELAY_MILSEC 60000
+#define RUNTST_PRINT_DELAY_MILSEC 10000
 static unsigned long serial_print_started_at;
+static uint8_t runtest;
 
 // ADC channels: 7 is battery, 6 is PV, 5 is boost, 4 is battery discharge, 3 is battery charge, 2 is PV_I.
 #define START_CHANNEL 2
 #define END_CHANNEL 7
 static uint8_t adc_index;
 
-// Load Control bits: LD0 is digital 10, LD1 is digital 11, LD2 is digital 12, LD3 is digital 13, 
-#define LD0 10
-#define LD1 11
-#define LD2 12
-#define LD3 13
-#define START_LD_STEP 0
-#define END_LD_STEP 15
 static uint8_t step_index;
+static uint8_t start_ld_step;
+static uint8_t end_ld_step;
+static uint16_t bat_discharge;
 
 float PWR;
 float PV_IN;
+
+void init_load(void)
+{
+    pinMode(LD0,OUTPUT);
+    digitalWrite(LD0, LOW);
+    pinMode(LD1,OUTPUT);
+    digitalWrite(LD1, LOW);
+    pinMode(LD2,OUTPUT);
+    digitalWrite(LD2, LOW);
+    pinMode(LD3,OUTPUT);
+    digitalWrite(LD3, LOW);
+}
 
 void load_step(uint8_t step)
 {
@@ -96,9 +105,78 @@ void CCtest(void)
 {
     if ( command_done == 10 )
     {
-        step_index = START_LD_STEP;
-        load_step(step_index);
-        command_done = 11;
+        if (arg_count == 0)
+        {
+            start_ld_step = START_LD_STEP;
+            end_ld_step = END_LD_STEP;
+            step_index = start_ld_step;
+            bat_discharge = 6500;
+            load_step(step_index);
+            runtest = 0;
+            command_done = 11;
+        }
+        
+        // arg must be a load step setting
+        if (arg_count == 1)
+        {
+            // check that argument[0] is in the range 0..15
+            if ( ( !( isdigit(arg[0][0]) ) ) || (atoi(arg[0]) < 0) || (atoi(arg[0]) > END_LD_STEP) )
+            {
+                printf_P(PSTR("{\"err\":\"LdStpSize %d\"}\r\n"), END_LD_STEP);
+                initCommandBuffer();
+                return;
+            }
+            
+            // run at a fixed load with RUNTEST time delay.
+            start_ld_step = atoi(arg[0]);
+            end_ld_step = start_ld_step;
+            step_index = start_ld_step;
+            bat_discharge = 6500;
+            load_step(step_index);
+            runtest = 1;
+            
+            //Shutdown the LT3652 (note R4 may have been removed if JTAG was used)
+            pinMode(SHUTDOWN,OUTPUT);
+            digitalWrite(SHUTDOWN, HIGH);
+            command_done = 11;
+        }
+        
+        // arg[0] is start_step, arg[1] is end_step, and arg[2] is the battery voltage (in mV) to switch from discharging to charging
+        if (arg_count == 3)
+        {
+            // check that argument[0] is in the range 0..15
+            if ( ( !( isdigit(arg[0][0]) ) ) || (atoi(arg[0]) < 0) || (atoi(arg[0]) > END_LD_STEP) )
+            {
+                printf_P(PSTR("{\"err\":\"LdStartMax %d\"}\r\n"), END_LD_STEP);
+                initCommandBuffer();
+                return;
+            }
+
+            // check that argument[1] is in the range 0..15
+            if ( ( !( isdigit(arg[1][0]) ) ) || (atoi(arg[1]) < 0) || (atoi(arg[1]) > END_LD_STEP) )
+            {
+                printf_P(PSTR("{\"err\":\"LdStopMax %d\"}\r\n"), END_LD_STEP);
+                initCommandBuffer();
+                return;
+            }
+
+            // check that argument[2] is in the range 6000..6500
+            if ( ( !( isdigit(arg[2][0]) ) ) || (atoi(arg[2]) < 6000) || (atoi(arg[2]) > 6500) )
+            {
+                printf_P(PSTR("{\"err\":\"LdVolt6V-6V5\"}\r\n"));
+                initCommandBuffer();
+                return;
+            }
+
+            // run at a fixed load with RUNTEST time delay.
+            start_ld_step = (uint8_t) (atoi(arg[0]));
+            end_ld_step = (uint8_t) (atoi(arg[1]));
+            step_index = start_ld_step;
+            bat_discharge = (uint16_t) (atoi(arg[2]));
+            load_step(step_index);
+            runtest = 0;
+            command_done = 11;
+        }
     }
 
     if ( command_done == 11 )
@@ -235,17 +313,18 @@ void CCtest(void)
     else if ( command_done == 18 )
     {
         printf_P(PSTR("}\r\n"));
-        if ( (step_index+1) > END_LD_STEP) 
+        if ( (step_index+1) > end_ld_step) 
         {
-            //Shutdown the LT3652 (note R4 may have been removed if JTAG was used)
-            pinMode(SHUTDOWN,OUTPUT);
-            digitalWrite(SHUTDOWN, HIGH);
-            
-            // reading zero sometimes is caused by problm with ISR (it will cause a skip)
-            if ( (PWR < 6.5) && (PWR > 4.0) )
+            // reading zero sometimes is caused by a problm with ISR (it will cause a skip)
+            if ( ( PWR < (bat_discharge/1000.0) ) && (PWR > 4.0) )
             {
-                step_index = START_LD_STEP;
+                step_index = start_ld_step;
                 load_step(step_index);
+                
+                // switch form loadtest delay to runtest delay
+                runtest =1;
+                
+                //Enable the LT3652
                 digitalWrite(SHUTDOWN, LOW);
             }
             
@@ -253,13 +332,27 @@ void CCtest(void)
         }
         else
         {
-            // reading zero sometimes is caused by problm with ISR (it will cause a skip)
-            // wait to be in CV mode which means the battery is at the float voltage
-            if ( PV_IN > 19.0 )
+            // wait to be in CV mode which means the battery is at the float voltage befor changing load
+            if ( (PV_IN > 19.0 ) && ( (arg_count == 0) || (arg_count == 3) ) )
             {
-                step_index++;
+                // shutdown PV so the the full discharge load is shown for each step
+                if (step_index == start_ld_step)
+                {
+                    //Shutdown the LT3652 (note R4 may have been removed if JTAG was used)
+                    pinMode(SHUTDOWN,OUTPUT);
+                    digitalWrite(SHUTDOWN, HIGH);
+                }
+                
+                // step through the load settings the firts time, but use max load after that so I can see the charge vs discharge as fixed values
+                if (runtest==0)
+                {
+                    step_index++;
+                }
+                else
+                {
+                    step_index = end_ld_step;
+                }
                 load_step(step_index);
-                digitalWrite(SHUTDOWN, LOW);
             }
             
             command_done = 19;
@@ -269,9 +362,19 @@ void CCtest(void)
     else if ( command_done == 19 ) 
     { // delay between JSON printing
         unsigned long kRuntime= millis() - serial_print_started_at;
-        if ((kRuntime) > ((unsigned long)LDTST_PRINT_DELAY_MILSEC))
+        if (runtest == 0)
         {
-            command_done = 11; /* This keeps looping output forever (until a Rx char anyway) */
+            if ((kRuntime) > ((unsigned long)LDTST_PRINT_DELAY_MILSEC))
+            {
+                command_done = 11; /* This keeps looping output forever (until a Rx char anyway) */
+            }
+        }
+        if (runtest > 0)
+        {
+            if ((kRuntime) > ((unsigned long)RUNTST_PRINT_DELAY_MILSEC))
+            {
+                command_done = 11; /* This keeps looping output forever (until a Rx char anyway) */
+            }
         }
     }
 

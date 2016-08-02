@@ -12,5 +12,6 @@
 extern void CCtest(void);
 extern void load_step(uint8_t step);
 extern void init_load(void);
+extern void init_pv(void);
 
 #endif // CCtest_H 

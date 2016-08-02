@@ -4,14 +4,117 @@
 
 I made a CCtest board that has high side current sensing for the PV input and Battery charging and discharging. The high side sensor only measures one direction so two are needed for the battery. A load is also provided, it has four digital control lines that enable current sinks. 
 
-At startup, the program steps through the current sink settings to record and make sure they are working. Then it gets stuck in a loop that reports the Battery, PV, and Charge Control  status. If the serial receives a character it will interrupt the test, but the test can be resumed see bellow.
+At startup, the program steps through the load settings for a record. Then it switches between charge and discharge and reports the Battery, and PV voltage and there current. Each discharge is a little deeper, steping down the battery voltage each time. If the serial receives a character it will interrupt the test and enable charging.
 
 For how I setup my Makefile toolchain <http://epccs.org/indexes/Document/DvlpNotes/LinuxBoxCrossCompiler.html>.
 
 With a serial port connection (set the BOOT_PORT in Makefile) and optiboot installed on the RPUno run 'make bootload' and it should compile and then flash the MCU.
 
 ``` 
-rsutherland@conversion:~/Samba/Irrigate7/Adc$ make bootload
+rsutherland@conversion:~/Samba/Irrigate7/CCtest$ make bootload
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o main.o main.c
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o cctest.o cctest.c
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../Uart/id.o ../Uart/id.c
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/timers.o ../lib/timers.c
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/uart.o ../lib/uart.c
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/adc.o ../lib/adc.c
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/parse.o ../lib/parse.c
+avr-gcc -Wl,-Map,Adc.map  -Wl,--gc-sections  -Wl,-u,vfprintf -lprintf_flt -lm -mmcu=atmega1284p main.o cctest.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/adc.o ../lib/parse.o -o Adc.elf
+avr-size -C --mcu=atmega1284p Adc.elf
+AVR Memory Usage
+----------------
+Device: atmega1284p
+
+Program:   10236 bytes (7.8% Full)
+(.text + .data + .bootloader)
+
+Data:        190 bytes (1.2% Full)
+(.data + .bss + .noinit)
+
+
+rm -f Adc.o main.o cctest.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/adc.o ../lib/parse.o
+avr-objcopy -j .text -j .data -O ihex Adc.elf Adc.hex
+rm -f Adc.elf
+avrdude -v -p atmega1284p -c avr109 -P /dev/ttyUSB0 -b 115200 -e -u -U flash:w:Adc.hex
+
+avrdude: Version 6.2
+         Copyright (c) 2000-2005 Brian Dean, http://www.bdmicro.com/
+         Copyright (c) 2007-2014 Joerg Wunsch
+
+         System wide configuration file is "/etc/avrdude.conf"
+         User configuration file is "/home/rsutherland/.avrduderc"
+         User configuration file does not exist or is not a regular file, skipping
+
+         Using Port                    : /dev/ttyUSB0
+         Using Programmer              : avr109
+         Overriding Baud Rate          : 115200
+         AVR Part                      : ATmega1284P
+         Chip Erase delay              : 55000 us
+         PAGEL                         : PD7
+         BS2                           : PA0
+         RESET disposition             : dedicated
+         RETRY pulse                   : SCK
+         serial program mode           : yes
+         parallel program mode         : yes
+         Timeout                       : 200
+         StabDelay                     : 100
+         CmdexeDelay                   : 25
+         SyncLoops                     : 32
+         ByteDelay                     : 0
+         PollIndex                     : 3
+         PollValue                     : 0x53
+         Memory Detail                 :
+
+                                  Block Poll               Page                       Polled
+           Memory Type Mode Delay Size  Indx Paged  Size   Size #Pages MinW  MaxW   ReadBack
+           ----------- ---- ----- ----- ---- ------ ------ ---- ------ ----- ----- ---------
+           eeprom        65    10   128    0 no       4096    8      0  9000  9000 0xff 0xff
+           flash         65    10   256    0 yes    131072  256    512  4500  4500 0xff 0xff
+           lock           0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
+           lfuse          0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
+           hfuse          0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
+           efuse          0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
+           signature      0     0     0    0 no          3    0      0     0     0 0x00 0x00
+           calibration    0     0     0    0 no          1    0      0     0     0 0x00 0x00
+
+         Programmer Type : butterfly
+         Description     : Atmel AppNote AVR109 Boot Loader
+
+Connecting to programmer: .
+Found programmer: Id = "XBoot++"; type = S
+    Software Version = 1.7; No Hardware Version given.
+Programmer supports auto addr increment.
+Programmer supports buffered memory access with buffersize=256 bytes.
+
+Programmer supports the following devices:
+    Device code: 0x7b
+
+avrdude: devcode selected: 0x7b
+avrdude: AVR device initialized and ready to accept instructions
+
+Reading | ################################################## | 100% 0.00s
+
+avrdude: Device signature = 0x1e9705 (probably m1284p)
+avrdude: erasing chip
+avrdude: reading input file "Adc.hex"
+avrdude: input file Adc.hex auto detected as Intel Hex
+avrdude: writing flash (10236 bytes):
+
+Writing | ################################################## | 100% 1.40s
+
+avrdude: 10236 bytes of flash written
+avrdude: verifying flash memory against Adc.hex:
+avrdude: load data flash data from input file Adc.hex:
+avrdude: input file Adc.hex auto detected as Intel Hex
+avrdude: input file Adc.hex contains 10236 bytes
+avrdude: reading on-chip flash data:
+
+Reading | ################################################## | 100% 1.05s
+
+avrdude: verifying ...
+avrdude: 10236 bytes of flash verified
+
+avrdude done.  Thank you.
 ``` 
 
 Now connect with picocom (or ilk). Note I am often at another computer doing this through SSH. The Samba folder is for editing the files from Windows.
@@ -48,176 +151,38 @@ Zero or three argument test, first it waits to enter float mode (PV_IN above 19V
 One argument test sets the load step value and runs with the charger off until receiving a character on the UART.
 
 ``` 
-
 /0/cctest?
-{"PV_I":"0.080","CHRG":"0.146","DISCHRG":"0.000","BOOST":"4.59","PV_IN":"16.63","PWR":"6.72","MILLIS":"57428","LDSTEP":"0",}
-{"PV_I":"0.080","CHRG":"0.145","DISCHRG":"0.000","BOOST":"4.59","PV_IN":"16.63","PWR":"6.72","MILLIS":"59428","LDSTEP":"0",}
-{"PV_I":"0.079","CHRG":"0.144","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.63","PWR":"6.74","MILLIS":"61429","LDSTEP":"0",}
-{"PV_I":"0.079","CHRG":"0.144","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.65","PWR":"6.75","MILLIS":"63430","LDSTEP":"0",}
-{"PV_I":"0.080","CHRG":"0.144","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.65","PWR":"6.76","MILLIS":"65431","LDSTEP":"0",}
-{"PV_I":"0.076","CHRG":"0.136","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.88","PWR":"6.77","MILLIS":"67432","LDSTEP":"0",}
-{"PV_I":"0.055","CHRG":"0.122","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"21.04","PWR":"6.77","MILLIS":"69433","LDSTEP":"0",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.037","BOOST":"4.59","PV_IN":"21.14","PWR":"6.67","MILLIS":"71434","LDSTEP":"1",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.045","BOOST":"4.59","PV_IN":"21.17","PWR":"6.65","MILLIS":"73436","LDSTEP":"2",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.053","BOOST":"4.59","PV_IN":"21.14","PWR":"6.64","MILLIS":"75437","LDSTEP":"3",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.060","BOOST":"4.59","PV_IN":"21.14","PWR":"6.63","MILLIS":"77437","LDSTEP":"4",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.069","BOOST":"4.50","PV_IN":"21.14","PWR":"6.62","MILLIS":"79438","LDSTEP":"5",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.076","BOOST":"4.50","PV_IN":"21.14","PWR":"6.61","MILLIS":"81439","LDSTEP":"6",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.085","BOOST":"4.50","PV_IN":"21.14","PWR":"6.61","MILLIS":"83440","LDSTEP":"7",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.093","BOOST":"4.50","PV_IN":"21.14","PWR":"6.60","MILLIS":"85441","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.101","BOOST":"4.50","PV_IN":"21.14","PWR":"6.59","MILLIS":"87442","LDSTEP":"9",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.109","BOOST":"4.50","PV_IN":"21.14","PWR":"6.58","MILLIS":"89443","LDSTEP":"10",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.116","BOOST":"4.50","PV_IN":"21.14","PWR":"6.58","MILLIS":"91444","LDSTEP":"11",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.125","BOOST":"4.50","PV_IN":"21.14","PWR":"6.57","MILLIS":"93446","LDSTEP":"12",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.132","BOOST":"4.50","PV_IN":"21.14","PWR":"6.56","MILLIS":"95447","LDSTEP":"13",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.141","BOOST":"4.50","PV_IN":"21.14","PWR":"6.56","MILLIS":"97447","LDSTEP":"14",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.50","PV_IN":"21.14","PWR":"6.56","MILLIS":"99448","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.50","PV_IN":"21.14","PWR":"6.55","MILLIS":"101449","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.55","MILLIS":"103450","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.50","PV_IN":"21.14","PWR":"6.54","MILLIS":"105451","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.54","MILLIS":"107452","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.53","MILLIS":"109453","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.000","BOOST":"4.50","PV_IN":"21.14","PWR":"6.53","MILLIS":"111454","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.53","MILLIS":"113456","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.53","MILLIS":"115457","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.53","MILLIS":"117457","LDSTEP":"15",}
-/0/cctest? 8
-{"PV_I":"0.049","CHRG":"0.108","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"21.04","PWR":"6.77","MILLIS":"152857","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.093","BOOST":"4.50","PV_IN":"21.17","PWR":"6.59","MILLIS":"162857","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.093","BOOST":"4.50","PV_IN":"21.14","PWR":"6.58","MILLIS":"172858","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.092","BOOST":"4.50","PV_IN":"21.14","PWR":"6.57","MILLIS":"182859","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.092","BOOST":"4.50","PV_IN":"21.14","PWR":"6.56","MILLIS":"192861","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.092","BOOST":"4.50","PV_IN":"21.14","PWR":"6.55","MILLIS":"202861","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.092","BOOST":"4.40","PV_IN":"21.14","PWR":"6.53","MILLIS":"212862","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.092","BOOST":"4.40","PV_IN":"21.14","PWR":"6.53","MILLIS":"222863","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.092","BOOST":"4.40","PV_IN":"21.14","PWR":"6.52","MILLIS":"232864","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.092","BOOST":"4.40","PV_IN":"21.14","PWR":"6.51","MILLIS":"242866","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.092","BOOST":"4.40","PV_IN":"21.14","PWR":"6.50","MILLIS":"252866","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.092","BOOST":"4.40","PV_IN":"21.14","PWR":"6.50","MILLIS":"262867","LDSTEP":"8",}
-{"PV_I":"0.080","CHRG":"0.085","DISCHRG":"0.000","BOOST":"4.50","PV_IN":"16.63","PWR":"6.58","MILLIS":"272868","LDSTEP":"8",}
-{"PV_I":"0.080","CHRG":"0.085","DISCHRG":"0.000","BOOST":"4.50","PV_IN":"16.63","PWR":"6.60","MILLIS":"282869","LDSTEP":"8",}
-/0/cctest? 0,15,6400
-{"PV_I":"0.020","CHRG":"0.033","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"21.07","PWR":"6.78","MILLIS":"17174","LDSTEP":"0",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.039","BOOST":"4.59","PV_IN":"21.14","PWR":"6.72","MILLIS":"19174","LDSTEP":"1",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.046","BOOST":"4.59","PV_IN":"21.14","PWR":"6.70","MILLIS":"21175","LDSTEP":"2",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.053","BOOST":"4.59","PV_IN":"21.14","PWR":"6.69","MILLIS":"23176","LDSTEP":"3",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.062","BOOST":"4.59","PV_IN":"21.14","PWR":"6.67","MILLIS":"25178","LDSTEP":"4",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.070","BOOST":"4.59","PV_IN":"21.14","PWR":"6.67","MILLIS":"27179","LDSTEP":"5",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.078","BOOST":"4.59","PV_IN":"21.14","PWR":"6.66","MILLIS":"29179","LDSTEP":"6",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.085","BOOST":"4.50","PV_IN":"21.14","PWR":"6.64","MILLIS":"31180","LDSTEP":"7",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.093","BOOST":"4.50","PV_IN":"21.14","PWR":"6.64","MILLIS":"33181","LDSTEP":"8",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.102","BOOST":"4.50","PV_IN":"21.14","PWR":"6.63","MILLIS":"35182","LDSTEP":"9",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.109","BOOST":"4.50","PV_IN":"21.14","PWR":"6.62","MILLIS":"37183","LDSTEP":"10",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.118","BOOST":"4.50","PV_IN":"21.14","PWR":"6.61","MILLIS":"39184","LDSTEP":"11",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.126","BOOST":"4.50","PV_IN":"21.14","PWR":"6.61","MILLIS":"41185","LDSTEP":"12",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.134","BOOST":"4.50","PV_IN":"21.14","PWR":"6.60","MILLIS":"43187","LDSTEP":"13",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.164","BOOST":"4.50","PV_IN":"21.14","PWR":"6.58","MILLIS":"45189","LDSTEP":"14",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.50","PV_IN":"21.14","PWR":"6.58","MILLIS":"47190","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.50","PV_IN":"21.14","PWR":"6.58","MILLIS":"49190","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.50","PV_IN":"21.14","PWR":"6.58","MILLIS":"51191","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.50","PV_IN":"21.14","PWR":"6.58","MILLIS":"53192","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.50","PV_IN":"21.14","PWR":"6.57","MILLIS":"55193","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.50","PV_IN":"21.14","PWR":"6.57","MILLIS":"57194","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.50","PV_IN":"21.14","PWR":"6.56","MILLIS":"59195","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.50","PV_IN":"21.14","PWR":"6.56","MILLIS":"61196","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.50","PV_IN":"21.14","PWR":"6.56","MILLIS":"63198","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.40","PV_IN":"21.14","PWR":"6.56","MILLIS":"65200","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.40","PV_IN":"21.14","PWR":"6.56","MILLIS":"67201","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.50","PV_IN":"21.14","PWR":"6.55","MILLIS":"69201","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.149","BOOST":"4.40","PV_IN":"21.14","PWR":"6.55","MILLIS":"71202","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.54","MILLIS":"73203","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.54","MILLIS":"75204","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.54","MILLIS":"77205","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.53","MILLIS":"79206","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.53","MILLIS":"81207","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.53","MILLIS":"83208","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.53","MILLIS":"85210","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.53","MILLIS":"87211","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.52","MILLIS":"89211","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.52","MILLIS":"91212","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.52","MILLIS":"93213","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.51","MILLIS":"95214","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.51","MILLIS":"97215","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.50","MILLIS":"99216","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.50","MILLIS":"101217","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.50","MILLIS":"103219","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.50","MILLIS":"105221","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.50","MILLIS":"107222","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.50","MILLIS":"109222","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.49","MILLIS":"111223","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.49","MILLIS":"113224","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.49","MILLIS":"115225","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.47","MILLIS":"117226","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.48","MILLIS":"119227","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.48","MILLIS":"121228","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.47","MILLIS":"123230","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.47","MILLIS":"125232","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.47","MILLIS":"127233","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.47","MILLIS":"129233","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.47","MILLIS":"131234","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.47","MILLIS":"133235","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.47","MILLIS":"135236","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.47","MILLIS":"137237","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.46","MILLIS":"139238","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.46","MILLIS":"141239","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.46","MILLIS":"143240","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.45","MILLIS":"145242","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.45","MILLIS":"147243","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.45","MILLIS":"149243","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.45","MILLIS":"151244","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.45","MILLIS":"153245","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.45","MILLIS":"155246","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.45","MILLIS":"157247","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"21.14","PWR":"6.45","MILLIS":"159248","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.45","MILLIS":"161249","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.44","MILLIS":"163251","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.44","MILLIS":"165253","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.44","MILLIS":"167254","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.44","MILLIS":"169254","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.44","MILLIS":"171255","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.43","MILLIS":"173256","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.43","MILLIS":"175257","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.43","MILLIS":"177258","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.43","MILLIS":"179259","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.43","MILLIS":"181260","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.43","MILLIS":"183262","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"185264","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"187265","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"0.00","PWR":"6.42","MILLIS":"189265","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"191266","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"193267","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"195268","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"197269","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"199270","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"201271","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"203272","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"205274","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"207275","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"209275","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.42","MILLIS":"211276","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.41","MILLIS":"213277","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.41","MILLIS":"215278","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.41","MILLIS":"217279","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.41","MILLIS":"219280","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.41","MILLIS":"221281","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.41","MILLIS":"223283","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.41","MILLIS":"225285","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.41","MILLIS":"227286","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"229286","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"231287","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"233288","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"235289","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"237290","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"239291","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"241292","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"243294","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"245296","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"247297","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"249297","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.40","MILLIS":"251298","LDSTEP":"15",}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"21.14","PWR":"6.39","MILLIS":"253299","LDSTEP":"15",}
-{"PV_I":"0.080","CHRG":"0.149","DISCHRG":"0.000","BOOST":"4.40","PV_IN":"16.63","PWR":"6.55","MILLIS":"263301","LDSTEP":"0",}
-{"PV_I":"0.080","CHRG":"0.149","DISCHRG":"0.000","BOOST":"4.40","PV_IN":"16.63","PWR":"6.57","MILLIS":"273301","LDSTEP":"0",}
-{"PV_I":"0.080","CHRG":"0.149","DISCHRG":"0.000","BOOST":"4.50","PV_IN":"16.63","PWR":"6.59","MILLIS":"283302","LDSTEP":"0",}
-
+{"PV_I":"0.066","CHRG":"0.112","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.63","PWR":"6.75","MILLIS":"254573","LDSTEP":"0"}
+{"PV_I":"0.067","CHRG":"0.090","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.63","PWR":"6.74","MILLIS":"256573","LDSTEP":"0"}
+{"PV_I":"0.066","CHRG":"0.090","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.63","PWR":"6.75","MILLIS":"258574","LDSTEP":"0"}
+{"PV_I":"0.069","CHRG":"0.095","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.65","PWR":"6.76","MILLIS":"260575","LDSTEP":"0"}
+{"PV_I":"0.073","CHRG":"0.105","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.68","PWR":"6.77","MILLIS":"262577","LDSTEP":"0"}
+{"PV_I":"0.060","CHRG":"0.105","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"19.87","PWR":"6.77","MILLIS":"264578","LDSTEP":"1"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.060","BOOST":"4.50","PV_IN":"19.98","PWR":"6.64","MILLIS":"266578","LDSTEP":"2"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.067","BOOST":"4.59","PV_IN":"19.98","PWR":"6.62","MILLIS":"268579","LDSTEP":"3"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.076","BOOST":"4.50","PV_IN":"19.98","PWR":"6.61","MILLIS":"270580","LDSTEP":"4"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.085","BOOST":"4.50","PV_IN":"19.98","PWR":"6.60","MILLIS":"272581","LDSTEP":"5"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.093","BOOST":"4.50","PV_IN":"19.98","PWR":"6.58","MILLIS":"274582","LDSTEP":"6"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.101","BOOST":"4.50","PV_IN":"19.98","PWR":"6.58","MILLIS":"276583","LDSTEP":"7"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.108","BOOST":"4.50","PV_IN":"19.98","PWR":"6.57","MILLIS":"278584","LDSTEP":"8"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.116","BOOST":"4.50","PV_IN":"19.98","PWR":"6.56","MILLIS":"280585","LDSTEP":"9"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.125","BOOST":"4.50","PV_IN":"19.98","PWR":"6.56","MILLIS":"282587","LDSTEP":"10"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.132","BOOST":"4.40","PV_IN":"19.98","PWR":"6.55","MILLIS":"284588","LDSTEP":"11"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.141","BOOST":"4.50","PV_IN":"19.98","PWR":"6.54","MILLIS":"286588","LDSTEP":"12"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"19.98","PWR":"6.53","MILLIS":"288589","LDSTEP":"13"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.157","BOOST":"4.40","PV_IN":"19.98","PWR":"6.53","MILLIS":"290590","LDSTEP":"14"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.165","BOOST":"4.40","PV_IN":"19.98","PWR":"6.53","MILLIS":"292591","LDSTEP":"15"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.172","BOOST":"4.40","PV_IN":"16.99","PWR":"6.52","MILLIS":"293593","LDSTEP":"0"}
+{"PV_I":"0.055","CHRG":"0.106","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"19.01","PWR":"6.78","MILLIS":"322697","LDSTEP":"15"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"16.99","PWR":"6.50","MILLIS":"357366","LDSTEP":"0"}
+{"PV_I":"0.052","CHRG":"0.098","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"19.01","PWR":"6.78","MILLIS":"406141","LDSTEP":"15"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"16.96","PWR":"6.45","MILLIS":"480302","LDSTEP":"0"}
+{"PV_I":"0.053","CHRG":"0.103","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"19.01","PWR":"6.77","MILLIS":"577157","LDSTEP":"15"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"16.96","PWR":"6.39","MILLIS":"722406","LDSTEP":"0"}
+{"PV_I":"0.057","CHRG":"0.112","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"19.01","PWR":"6.77","MILLIS":"890142","LDSTEP":"15"}
+{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.145","BOOST":"4.22","PV_IN":"16.99","PWR":"6.34","MILLIS":"3087073","LDSTEP":"0"}
 ```
+
+# Notes
+
+PV_IN is updated with the MPPT value when the load is switched off and charge is switched on, however the other values are from the point of maximum discharge, e.g. when the battery is just bellow 6.35V.

@@ -26,10 +26,6 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "../Uart/id.h"
 #include "cctest.h"
 
-// running the ADC burns power, which can be saved by delaying its use
-#define ADC_DELAY_MILSEC 250
-static unsigned long adc_started_at;
-
 void ProcessCmd()
 { 
     if ( (strcmp_P( command, PSTR("/id?")) == 0) && ( (arg_count == 0) || (arg_count == 1) ) )
@@ -51,12 +47,14 @@ int main(void)
     
     // setup()
 
-    // Set LDx pins as output to control load
+    // Set digital pins to control load
     init_load();
-    
-    // put ADC in Auto Trigger mode and fetch an array of channels
-    enable_ADC_auto_conversion();
-    adc_started_at = millis();
+
+    // Set digital pins to control solar
+    init_pv();
+
+    // put ADC in free running Auto Trigger mode
+    enable_ADC_auto_conversion(FREE_RUNNING);
     
     
     /* Initialize UART, it returns a pointer to FILE so redirect of stdin and stdout works*/
@@ -79,8 +77,6 @@ int main(void)
     // loop() 
     while(1) /* I am tyring to use non-blocking code */
     { 
-        unsigned long kRuntime;
-        
         // check if character is available to assemble a command, e.g. non-blocking
         if ( (!command_done) && uart0_available() ) // command_done is an extern from parse.h
         {
@@ -106,14 +102,6 @@ int main(void)
             // trun off the load
             load_step(0);
         }
-        
-        // delay between ADC reading
-        kRuntime= millis() - adc_started_at;
-        if ((kRuntime) > ((unsigned long)ADC_DELAY_MILSEC))
-        {
-            enable_ADC_auto_conversion();
-            adc_started_at = millis();
-        } 
         
         // finish echo of the command line befor starting a reply (or the next part of a reply)
         if ( command_done && (uart0_availableForWrite() == UART_TX0_BUFFER_SIZE) )

@@ -28,8 +28,10 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "cctest.h"
 
 #define LDTST_PRINT_DELAY_MILSEC 2000
-#define RUNTST_PRINT_DELAY_MILSEC 1000
+#define ABSORPTION_DELAY_MILSEC 10000
 static unsigned long serial_print_started_at;
+static unsigned long absorption_started_at;
+static uint8_t absorption;
 static uint8_t runtest;
 
 // ADC channels: 7 is battery, 6 is PV, 5 is boost, 4 is battery discharge, 3 is battery charge, 2 is PV_I.
@@ -42,7 +44,7 @@ static uint8_t start_ld_step;
 static uint8_t end_ld_step;
 
 // Voltage at which discharge stops and charging starts is in miliVolt
-#define MAX_DISCHARGE 6200
+#define MAX_DISCHARGE 6400
 #define FIRST_DISCHARGE 6550
 #define DISCHARGE_STEP 50
 static uint16_t bat_discharge;
@@ -53,6 +55,10 @@ float PWR;
 float CHRG;
 float DISCHRG;
 float BOOST;
+float bat_report;
+
+//absorption debuging
+static uint8_t absorption_progress;
 
 void init_load(void)
 {
@@ -128,9 +134,10 @@ void CCtest(void)
             start_ld_step = START_LD_STEP;
             end_ld_step = END_LD_STEP;
             step_index = start_ld_step;
-            bat_discharge = FIRST_DISCHARGE;
+            bat_discharge = MAX_DISCHARGE;
             load_step(step_index);
             runtest = 0;
+            absorption = 0;
             command_done = 11;
         }
         
@@ -149,9 +156,10 @@ void CCtest(void)
             start_ld_step = atoi(arg[0]);
             end_ld_step = start_ld_step;
             step_index = start_ld_step;
-            bat_discharge = FIRST_DISCHARGE;
+            bat_discharge = MAX_DISCHARGE;
             load_step(step_index);
             runtest = 1;
+            absorption = 0;
             
             //Shutdown the LT3652
             digitalWrite(SHUTDOWN, HIGH);
@@ -192,6 +200,7 @@ void CCtest(void)
             bat_discharge = (uint16_t) (atoi(arg[2]));
             load_step(step_index);
             runtest = 0;
+            absorption = 0;
             command_done = 11;
         }
         PV_IN = analogRead(6)*(5.0/1024.0)*(532.0/100.0);
@@ -219,22 +228,31 @@ void CCtest(void)
 
         if (adc_index == 2)
         {
-            printf_P(PSTR("\"PV_I\":"));
+            if (PV_I > 0.005)
+            {
+                printf_P(PSTR("\"PV_I\":"));
+            }
         }
 
         if (adc_index == 3)
         {
-            printf_P(PSTR("\"CHRG\":"));
+            if (CHRG > 0.005)
+            {
+                printf_P(PSTR("\"CHRG\":"));
+            }
         }
 
         if (adc_index == 4)
         {
-            printf_P(PSTR("\"DISCHRG\":"));
+            if (DISCHRG > 0.005)
+            {
+                printf_P(PSTR("\"DISCHRG\":"));
+            }
         }
 
         if (adc_index == 5)
         {
-            printf_P(PSTR("\"BOOST\":"));
+            //printf_P(PSTR("\"BOOST\":"));
         }
 
         if (adc_index == 6)
@@ -255,53 +273,60 @@ void CCtest(void)
         // https://forum.arduino.cc/index.php?topic=303189.0        
         if (adc_index < 2)
         {
-            printf_P(PSTR("\"%1.2f\""),(analogRead(adc_index)*5.0/1024.0));
+            printf_P(PSTR("\"%1.2f\","),(analogRead(adc_index)*5.0/1024.0));
         }
 
         // CCtest board has a 50V/V current sense amp to a high side 0.068 Ohm to measure PV current.
         if (adc_index == 2) 
         {
-            printf_P(PSTR("\"%1.3f\""),PV_I);
+            if (PV_I > 0.005)
+            {
+                printf_P(PSTR("\"%1.3f\","),PV_I);
+            }
         }
 
         // CCtest board has a 50V/V current sense amp to a high side 0.068 Ohm to measure battery charging.
         if (adc_index == 3) 
         {
-            printf_P(PSTR("\"%1.3f\""),CHRG);
+            if (CHRG > 0.005)
+            {
+                printf_P(PSTR("\"%1.3f\","),CHRG);
+            }
         }
 
         // CCtest board has a 50V/V current sense amp to a high side 0.068 Ohm to measure battery discharg.
         if (adc_index == 4) 
         {
-            printf_P(PSTR("\"%1.3f\""),DISCHRG);
+            if (DISCHRG > 0.005)
+            {
+                printf_P(PSTR("\"%1.3f\","),DISCHRG);
+            }
         }
 
         // Irrigate7 has a 100k and 5.62k  voltage divider on the solenoid boost converter. The BOOST goes through a 100k  to ADC5 and a 5.62k to ground.
         if (adc_index == 5) 
         {
-            printf_P(PSTR("\"%1.2f\""),BOOST);
+            //printf_P(PSTR("\"%1.2f\","),BOOST);
         }
         
         // Irrigate7 has a 432k and 100k voltage divider from the solar input. The PV goes through a 432k  to ADC6 and a 100k to ground.
         if (adc_index == 6) 
         {
-            printf_P(PSTR("\"%1.2f\""),PV_IN);
+            printf_P(PSTR("\"%1.2f\","),PV_IN);
         }
 
         // Irrigate7 has a 100 and 200k voltage divider from the battery(PWR). The PWR goes through a 100k  to ADC7 and a 200k to ground.
         if (adc_index == 7) 
         {
-            printf_P(PSTR("\"%1.2f\""),PWR);
+            printf_P(PSTR("\"%1.2f\","),PWR);
         }
 
         if ( (adc_index+1) > END_CHANNEL) 
         {
-            printf_P(PSTR(","));
             command_done = 14;
         }
         else
         {
-            printf_P(PSTR(","));
             adc_index++;
             command_done = 12;
         }
@@ -309,7 +334,7 @@ void CCtest(void)
 
     else if ( command_done == 14 )
     {
-        printf_P(PSTR("\"MILLIS\":"));
+        printf_P(PSTR("\"TIME\":"));
         command_done = 15;
     }
 
@@ -321,7 +346,7 @@ void CCtest(void)
 
     else if ( command_done == 16 )
     {
-        printf_P(PSTR("\"LDSTEP\":"));
+        printf_P(PSTR("\"LD\":"));
         command_done = 17;
     }
 
@@ -332,19 +357,26 @@ void CCtest(void)
         command_done = 18;
     }
 
+    // check if at a load change condition
     else if ( command_done == 18 )
     {
-        // step through loads to check each load setting
         PWR = analogRead(7)*(5.0/1024.0)*(3.0/2.0);
         PV_IN = analogRead(6)*(5.0/1024.0)*(532.0/100.0);
         PV_I = analogRead(2)*(5.0/1024.0)/(0.068*50.0);
         CHRG = analogRead(3)*(5.0/1024.0)/(0.068*50.0);
         DISCHRG = analogRead(4)*(5.0/1024.0)/(0.068*50.0);
         BOOST = analogRead(5)*(5.0/1024.0)*(105.62/5.62);
-        if ( (step_index+1) > end_ld_step) 
+        
+        // absorption
+        if (absorption)
+        {
+            command_done = 21;
+        }
+        
+        // when at the highest load setting check if the load needs turned off, and charging enabled.  
+        else if ( (step_index+1) > end_ld_step) 
         {
             // max load needs to end when battery voltage has discharged to the setpoint 
-            // reading zero sometimes is caused by a problm with ISR (it will cause a skip, not a problem atm)
             if ( ( PWR < (bat_discharge/1000.0) ) && (PWR > 4.0) )
             {
                 step_index = start_ld_step;
@@ -359,53 +391,46 @@ void CCtest(void)
                 // verfiy that we have MPPT mode
                 command_done = 19;
             }
-            
-            // durring load test use timeing delay
-            if (runtest==0)
+
+            // report at voltage levels
+            else if ( ( PWR < bat_report ) && (PWR > 4.0) )
             {
                 command_done = 20;
+                bat_report = bat_report - DISCHARGE_STEP/1000.0;
             }
         }
         else
         {
-            // If LT3652 is not shutdown then the MPPT mode can be used to wait
-            // to be charging in CV mode
-            if ( (PV_IN > 19.0 ) && ( (arg_count == 0) || (arg_count == 3) ) )
+            if (arg_count == 1)
+            {
+                command_done = 20;
+            }                
+            // If LT3652 is enabled then the MPPT mode can be used to wait
+            // for CV (aka float) mode
+            else if ( (PV_IN > 19.0 ) && ( (arg_count == 0) || (arg_count == 3) ) )
             {
                 // shutdown PV so the the full discharge load is shown for each step
-                if (step_index == start_ld_step)
+                if ( (step_index == start_ld_step) && (digitalRead(SHUTDOWN) == LOW) && (!runtest) )
                 {
                     //Shutdown the LT3652 (note R4 may have been removed if JTAG was used)
                     digitalWrite(SHUTDOWN, HIGH);
+                    bat_report = FIRST_DISCHARGE/1000.0;
                 }
-                
-                // step through the load settings the firts time, but use max load after that so I can see the charge vs discharge as fixed values
-                if (runtest==0)
-                {
+                else if (!runtest)
+                { // skip step through the load settings 
                     step_index++;
+                    load_step(step_index);
+                    command_done = 20;
                 }
                 else
                 {
-                    step_index = end_ld_step;
+                    // absorption cycle, note the LT3652 is not yet shutdown
+                    absorption_started_at = millis();
+                    printf_P(PSTR("{\"rpt\":\"AbsorptionBeg\"}\r\n"));
+                    absorption = 1;
+                    absorption_progress = 0;
+                    command_done = 21;
                 }
-                load_step(step_index);
-                
-                // durring run test delay until setpoint is reached
-                if (runtest)
-                {
-                    // reduce the discharge setpoint each cycle up to the max
-                    if (bat_discharge > MAX_DISCHARGE)
-                    {
-                        bat_discharge -= DISCHARGE_STEP;
-                    }
-                    command_done = 20;
-                }
-            }
-            
-            // durring load test use timeing delay
-            if (runtest==0)
-            {
-                command_done = 20;
             }
         }
     }
@@ -420,6 +445,7 @@ void CCtest(void)
             PV_IN = analogRead(6)*(5.0/1024.0)*(532.0/100.0);
             if ( (PV_IN > 16.0 ) &&  (PV_IN < 17.0 ))
             {
+                printf_P(PSTR("{\"rpt\":\"VerifyMPPT\"}\r\n"));
                 command_done = 20;
             }
         }
@@ -432,19 +458,63 @@ void CCtest(void)
     else if ( command_done == 20 ) 
     { // delay between JSON printing
         unsigned long kRuntime= millis() - serial_print_started_at;
-        if (runtest == 0)
+
+        if ((kRuntime) > ((unsigned long)LDTST_PRINT_DELAY_MILSEC))
         {
-            if ((kRuntime) > ((unsigned long)LDTST_PRINT_DELAY_MILSEC))
+            command_done = 11; /* This keeps looping output forever (until a Rx char anyway) */
+        }
+    }
+
+    else if ( command_done == 21 ) // absorption cycle
+    {
+        unsigned long kRuntime= millis() - absorption_started_at;
+
+        if ((kRuntime) > ((unsigned long)ABSORPTION_DELAY_MILSEC))
+        {
+            absorption = 0;
+            printf_P(PSTR("{\"rpt\":\"AbsorptionEnd\"}\r\n"));
+            command_done = 22; // verify that it is night befor starting load
+        }
+        else
+        {
+            // used for debuging the absorption cycle
+            uint8_t progress = ( (kRuntime/2000) % 60 );
+            if (absorption_progress < progress )
             {
-                command_done = 11; /* This keeps looping output forever (until a Rx char anyway) */
+                printf_P(PSTR("*"));
+                absorption_progress = progress;
+            }
+            else if ( (progress == 0) && (absorption_progress > 0) )
+            {
+                printf_P(PSTR("\r\n"));
+                absorption_progress = 0;
             }
         }
-        if (runtest > 0)
+    }
+
+    else if ( command_done == 22 ) //verify night
+    { 
+        if ( (arg_count == 0) || (arg_count == 3) )
         {
-            if ((kRuntime) > ((unsigned long)RUNTST_PRINT_DELAY_MILSEC))
+            // wait for night to start load
+            PV_IN = analogRead(6)*(5.0/1024.0)*(532.0/100.0);
+            if ( (PV_IN > 0.0 ) &&  (PV_IN < 5.0 ))
             {
-                command_done = 11; /* This keeps looping output forever (until a Rx char anyway) */
+                printf_P(PSTR("{\"rpt\":\"VerifyNight\"}\r\n"));
+                
+                // set the load
+                step_index = end_ld_step;
+                load_step(step_index);
+                
+                //Shutdown the LT3652 
+                digitalWrite(SHUTDOWN, HIGH);
+                bat_report = FIRST_DISCHARGE/1000.0;
+                command_done = 20;
             }
+        }
+        else
+        {
+            command_done = 20;
         }
     }
 

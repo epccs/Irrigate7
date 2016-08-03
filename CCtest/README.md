@@ -2,9 +2,9 @@
 
 ## Overview
 
-I made a CCtest board that has high side current sensing for the PV input and Battery charging and discharging. The high side sensor only measures one direction so two are needed for the battery. A load is also provided, it has four digital control lines that enable current sinks. 
+I made a  [CCtest]<http://epccs.org/indexes/Board/CCtest> board that has high side current sensing for the PV input and Battery charging and discharging. The high side sensor only measures one direction so two are needed for the battery. A load is also provided, it has four digital control lines that enable current sinks. 
 
-At startup, the program steps through the load settings for a record. Then it switches between charge and discharge and reports the Battery, and PV voltage and there current. Each discharge is a little deeper, steping down the battery voltage each time. If the serial receives a character it will interrupt the test and enable charging.
+At startup, the program waits until the PV_IN is over 19V which means solar has charged the battery to its float level. It then delays for 3hr to allow an absorption cycle to complete. After which a delay occurs until PV_IN has dropped to less than 5V (e.g. night). Next, the load settings are stepped through for a record. Then it discharges and reports as the Battery voltage crosses 50mV thresholds until the discharge voltage is reached. If the serial receives a character it will interrupt the test and enable charging.
 
 For how I setup my Makefile toolchain <http://epccs.org/indexes/Document/DvlpNotes/LinuxBoxCrossCompiler.html>.
 
@@ -25,10 +25,10 @@ AVR Memory Usage
 ----------------
 Device: atmega1284p
 
-Program:   10236 bytes (7.8% Full)
+Program:   11580 bytes (8.8% Full)
 (.text + .data + .bootloader)
 
-Data:        190 bytes (1.2% Full)
+Data:        223 bytes (1.4% Full)
 (.data + .bss + .noinit)
 
 
@@ -98,21 +98,21 @@ avrdude: Device signature = 0x1e9705 (probably m1284p)
 avrdude: erasing chip
 avrdude: reading input file "Adc.hex"
 avrdude: input file Adc.hex auto detected as Intel Hex
-avrdude: writing flash (10236 bytes):
+avrdude: writing flash (11580 bytes):
 
-Writing | ################################################## | 100% 1.40s
+Writing | ################################################## | 100% 1.60s
 
-avrdude: 10236 bytes of flash written
+avrdude: 11580 bytes of flash written
 avrdude: verifying flash memory against Adc.hex:
 avrdude: load data flash data from input file Adc.hex:
 avrdude: input file Adc.hex auto detected as Intel Hex
-avrdude: input file Adc.hex contains 10236 bytes
+avrdude: input file Adc.hex contains 11580 bytes
 avrdude: reading on-chip flash data:
 
-Reading | ################################################## | 100% 1.05s
+Reading | ################################################## | 100% 1.24s
 
 avrdude: verifying ...
-avrdude: 10236 bytes of flash verified
+avrdude: 11580 bytes of flash verified
 
 avrdude done.  Thank you.
 ``` 
@@ -146,43 +146,46 @@ identify
 
 ##  /0/cctest? [load_step]|[start_step,end_step,bat_mv]
 
-Zero or three argument test, first it waits to enter float mode (PV_IN above 19V), then it will step through each load setting with charger turned off to see the DISCHRG amps. Once at the end_step (default is 15) load, it waits for the voltage to drop bellow bat_mv (6500mV is default) then the load is set to start_step (default is 0) and waits for the PV_IN to change from MPPT mode to float mode (e.g. PV_IN is above 19V) again. Once in float, the process repeats until receiving a character on the UART. 
+For zero or three argument test, first the program waits until the PV_IN is over 19V which means solar has charged the battery to its float level. Next, the load settings are stepped through for a record. Then the Loop enters now to discharge and reports as the Battery voltage crosses 50mV thresholds until the discharge voltage is reached. Cycling through a verify MPPT mode that starts charging up to the float voltage. Following an absorption cycle to complete the charge. After which it waits until Night (PV_IN less than 5V). And then the loop cycles back into discharge. If the serial line receives a character it will interrupt the test and enable charging.
 
 One argument test sets the load step value and runs with the charger off until receiving a character on the UART.
 
 ``` 
 /0/cctest?
-{"PV_I":"0.066","CHRG":"0.112","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.63","PWR":"6.75","MILLIS":"254573","LDSTEP":"0"}
-{"PV_I":"0.067","CHRG":"0.090","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.63","PWR":"6.74","MILLIS":"256573","LDSTEP":"0"}
-{"PV_I":"0.066","CHRG":"0.090","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.63","PWR":"6.75","MILLIS":"258574","LDSTEP":"0"}
-{"PV_I":"0.069","CHRG":"0.095","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.65","PWR":"6.76","MILLIS":"260575","LDSTEP":"0"}
-{"PV_I":"0.073","CHRG":"0.105","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"16.68","PWR":"6.77","MILLIS":"262577","LDSTEP":"0"}
-{"PV_I":"0.060","CHRG":"0.105","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"19.87","PWR":"6.77","MILLIS":"264578","LDSTEP":"1"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.060","BOOST":"4.50","PV_IN":"19.98","PWR":"6.64","MILLIS":"266578","LDSTEP":"2"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.067","BOOST":"4.59","PV_IN":"19.98","PWR":"6.62","MILLIS":"268579","LDSTEP":"3"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.076","BOOST":"4.50","PV_IN":"19.98","PWR":"6.61","MILLIS":"270580","LDSTEP":"4"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.085","BOOST":"4.50","PV_IN":"19.98","PWR":"6.60","MILLIS":"272581","LDSTEP":"5"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.093","BOOST":"4.50","PV_IN":"19.98","PWR":"6.58","MILLIS":"274582","LDSTEP":"6"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.101","BOOST":"4.50","PV_IN":"19.98","PWR":"6.58","MILLIS":"276583","LDSTEP":"7"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.108","BOOST":"4.50","PV_IN":"19.98","PWR":"6.57","MILLIS":"278584","LDSTEP":"8"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.116","BOOST":"4.50","PV_IN":"19.98","PWR":"6.56","MILLIS":"280585","LDSTEP":"9"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.125","BOOST":"4.50","PV_IN":"19.98","PWR":"6.56","MILLIS":"282587","LDSTEP":"10"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.132","BOOST":"4.40","PV_IN":"19.98","PWR":"6.55","MILLIS":"284588","LDSTEP":"11"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.141","BOOST":"4.50","PV_IN":"19.98","PWR":"6.54","MILLIS":"286588","LDSTEP":"12"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"19.98","PWR":"6.53","MILLIS":"288589","LDSTEP":"13"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.157","BOOST":"4.40","PV_IN":"19.98","PWR":"6.53","MILLIS":"290590","LDSTEP":"14"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.165","BOOST":"4.40","PV_IN":"19.98","PWR":"6.53","MILLIS":"292591","LDSTEP":"15"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.172","BOOST":"4.40","PV_IN":"16.99","PWR":"6.52","MILLIS":"293593","LDSTEP":"0"}
-{"PV_I":"0.055","CHRG":"0.106","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"19.01","PWR":"6.78","MILLIS":"322697","LDSTEP":"15"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.148","BOOST":"4.40","PV_IN":"16.99","PWR":"6.50","MILLIS":"357366","LDSTEP":"0"}
-{"PV_I":"0.052","CHRG":"0.098","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"19.01","PWR":"6.78","MILLIS":"406141","LDSTEP":"15"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"16.96","PWR":"6.45","MILLIS":"480302","LDSTEP":"0"}
-{"PV_I":"0.053","CHRG":"0.103","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"19.01","PWR":"6.77","MILLIS":"577157","LDSTEP":"15"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.146","BOOST":"4.31","PV_IN":"16.96","PWR":"6.39","MILLIS":"722406","LDSTEP":"0"}
-{"PV_I":"0.057","CHRG":"0.112","DISCHRG":"0.000","BOOST":"4.68","PV_IN":"19.01","PWR":"6.77","MILLIS":"890142","LDSTEP":"15"}
-{"PV_I":"0.000","CHRG":"0.000","DISCHRG":"0.145","BOOST":"4.22","PV_IN":"16.99","PWR":"6.34","MILLIS":"3087073","LDSTEP":"0"}
+{"PV_I":"0.052","CHRG":"0.072","PV_IN":"16.60","PWR":"6.59","TIME":"6","LD":"0"}
+{"PV_I":"0.043","CHRG":"0.080","PV_IN":"19.01","PWR":"6.77","TIME":"103499","LD":"1"}
+{"DISCHRG":"0.062","PV_IN":"19.20","PWR":"6.72","TIME":"105498","LD":"2"}
+{"DISCHRG":"0.069","PV_IN":"19.92","PWR":"6.65","TIME":"107499","LD":"3"}
+{"DISCHRG":"0.078","PV_IN":"19.92","PWR":"6.64","TIME":"109500","LD":"4"}
+{"DISCHRG":"0.086","PV_IN":"19.92","PWR":"6.62","TIME":"111501","LD":"5"}
+{"DISCHRG":"0.093","PV_IN":"19.92","PWR":"6.61","TIME":"113502","LD":"6"}
+{"DISCHRG":"0.101","PV_IN":"19.92","PWR":"6.60","TIME":"115503","LD":"7"}
+{"DISCHRG":"0.108","PV_IN":"19.92","PWR":"6.59","TIME":"117505","LD":"8"}
+{"DISCHRG":"0.116","PV_IN":"19.92","PWR":"6.58","TIME":"119505","LD":"9"}
+{"DISCHRG":"0.125","PV_IN":"19.92","PWR":"6.58","TIME":"121506","LD":"10"}
+{"DISCHRG":"0.132","PV_IN":"19.92","PWR":"6.57","TIME":"123507","LD":"11"}
+{"DISCHRG":"0.141","PV_IN":"19.92","PWR":"6.56","TIME":"125508","LD":"12"}
+{"DISCHRG":"0.149","PV_IN":"19.92","PWR":"6.56","TIME":"127509","LD":"13"}
+{"DISCHRG":"0.155","PV_IN":"19.92","PWR":"6.55","TIME":"129510","LD":"14"}
+{"DISCHRG":"0.164","PV_IN":"19.92","PWR":"6.54","TIME":"131511","LD":"15"}
+{"DISCHRG":"0.172","PV_IN":"19.92","PWR":"6.53","TIME":"133512","LD":"15"}
+{"DISCHRG":"0.148","PV_IN":"19.92","PWR":"6.50","TIME":"157497","LD":"15"}
+{"DISCHRG":"0.146","PV_IN":"19.92","PWR":"6.45","TIME":"196733","LD":"15"}
+{"rpt":"VerifyMPPT"}
+{"DISCHRG":"0.146","PV_IN":"16.96","PWR":"6.39","TIME":"255933","LD":"0"}
+{"rpt":"AbsorptionBeg"}
+*****{"rpt":"AbsorptionEnd"}
+{"rpt":"VerifyNight"}
+{"PV_I":"0.055","CHRG":"0.106","PV_IN":"4.99","PWR":"6.77","TIME":"478832","LD":"15"}
+{"DISCHRG":"0.148","PV_IN":"12.94","PWR":"6.55","TIME":"501201","LD":"15"}
+{"DISCHRG":"0.146","PV_IN":"20.86","PWR":"6.50","TIME":"535259","LD":"15"}
+{"DISCHRG":"0.145","PV_IN":"20.86","PWR":"6.45","TIME":"573504","LD":"15"}
+{"rpt":"VerifyMPPT"}
+{"DISCHRG":"0.145","PV_IN":"16.99","PWR":"6.39","TIME":"628700","LD":"0"}
 ```
 
 # Notes
 
-PV_IN is updated with the MPPT value when the load is switched off and charge is switched on, however the other values are from the point of maximum discharge, e.g. when the battery is just bellow 6.35V.
+TBD more debuging to do.
+
+The battery discharge current reads near 172mA when the serial driver is more active and 146mA when it is not active, this is because the RS485 drivers were not sinking current at the moment of the 146mA reading. 

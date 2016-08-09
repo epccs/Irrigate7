@@ -1,12 +1,11 @@
 # Makefile 
-TARGET = CCtest
+TARGET = LoopPwr
 LIBDIR = ../lib
 OBJECTS = main.o \
-	cctest.o \
+	loop_pwr.o \
 	../Uart/id.o \
 	$(LIBDIR)/timers.o \
 	$(LIBDIR)/uart.o \
-	$(LIBDIR)/adc.o \
 	$(LIBDIR)/parse.o
 
 ## Chip and project-specific global definitions

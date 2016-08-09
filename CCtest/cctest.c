@@ -1,5 +1,5 @@
 /*
-cctest is part of CCtest, it is a test for Irrigate7's battery charge control and PV power, 
+cctest is part of CCtest
 Copyright (C) 2016 Ronald Sutherland
 
 This program is free software; you can redistribute it and/or
@@ -28,14 +28,14 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "cctest.h"
 
 #define LDTST_PRINT_DELAY_MILSEC 2000
-#define ABSORPTION_DELAY_MILSEC 10000
+#define ABSORPTION_DELAY_MILSEC 10800000UL
 static unsigned long serial_print_started_at;
 static unsigned long absorption_started_at;
 static uint8_t absorption;
 static uint8_t runtest;
 
 // ADC channels: 7 is battery, 6 is PV, 5 is boost, 4 is battery discharge, 3 is battery charge, 2 is PV_I.
-#define START_CHANNEL 2
+#define START_CHANNEL 1
 #define END_CHANNEL 7
 static uint8_t adc_index;
 
@@ -44,17 +44,17 @@ static uint8_t start_ld_step;
 static uint8_t end_ld_step;
 
 // Voltage at which discharge stops and charging starts is in miliVolt
-#define MAX_DISCHARGE 6400
+#define MAX_DISCHARGE 6200
 #define FIRST_DISCHARGE 6550
 #define DISCHARGE_STEP 50
 static uint16_t bat_discharge;
 
-float PV_IN;
-float PV_I;
-float PWR;
-float CHRG;
-float DISCHRG;
-float BOOST;
+float pv_v;
+float pv_i;
+float pwr_v;
+float boost_v;
+float chrg_i;
+float dischrg_i;
 float bat_report;
 
 //absorption debuging
@@ -203,12 +203,12 @@ void CCtest(void)
             absorption = 0;
             command_done = 11;
         }
-        PV_IN = analogRead(6)*(5.0/1024.0)*(532.0/100.0);
-        PV_I = analogRead(2)*(5.0/1024.0)/(0.068*50.0);
-        PWR = analogRead(7)*(5.0/1024.0)*(3.0/2.0);
-        CHRG = analogRead(3)*(5.0/1024.0)/(0.068*50.0);
-        DISCHRG = analogRead(4)*(5.0/1024.0)/(0.068*50.0);
-        BOOST = analogRead(5)*(5.0/1024.0)*(105.62/5.62);
+        pv_v = analogRead(PV_V)*(5.0/1024.0)*(532.0/100.0);
+        pv_i = analogRead(PV_I)*(5.0/1024.0)/(0.068*50.0);
+        pwr_v = analogRead(PWR_V)*(5.0/1024.0)*(3.0/2.0);
+        chrg_i = analogRead(CHRG_I)*(5.0/1024.0)/(0.068*50.0);
+        dischrg_i = analogRead(DISCHRG_I)*(5.0/1024.0)/(0.068*50.0);
+        boost_v = analogRead(BOOST_V)*(5.0/1024.0)*(105.62/5.62);
     }
 
     if ( command_done == 11 )
@@ -220,105 +220,78 @@ void CCtest(void)
     }
     
     else if ( command_done == 12 )
-    { // use the channel as an index in the JSON reply
-        if (adc_index < 2)
-        {
-            printf_P(PSTR("\"ADC%d\":"),adc_index);
-        }
+    { // JSON index 
 
-        if (adc_index == 2)
+        if (adc_index == PV_I)
         {
-            if (PV_I > 0.005)
+            if (pv_i > 0.001)
             {
-                printf_P(PSTR("\"PV_I\":"));
+                printf_P(PSTR("\"PV_A\":"));
             }
         }
 
-        if (adc_index == 3)
+        if (adc_index == CHRG_I)
         {
-            if (CHRG > 0.005)
+            if (chrg_i > 0.002)
             {
-                printf_P(PSTR("\"CHRG\":"));
+                printf_P(PSTR("\"CHRG_A\":"));
             }
         }
 
-        if (adc_index == 4)
+        if (adc_index == DISCHRG_I) 
         {
-            if (DISCHRG > 0.005)
+            if (dischrg_i > 0.002)
             {
-                printf_P(PSTR("\"DISCHRG\":"));
+                printf_P(PSTR("\"DIS_A\":"));
             }
         }
 
-        if (adc_index == 5)
+        if (adc_index == PV_V)
         {
-            //printf_P(PSTR("\"BOOST\":"));
+            printf_P(PSTR("\"PV_V\":"));
         }
 
-        if (adc_index == 6)
+        if (adc_index == PWR_V) 
         {
-            printf_P(PSTR("\"PV_IN\":"));
-        }
-
-        if (adc_index == 7)
-        {
-            printf_P(PSTR("\"PWR\":"));
+            printf_P(PSTR("\"PWR_V\":"));
         }
         command_done = 13;
     }
 
     else if ( command_done == 13 )
     {
-        // There are values from 0 to 1023 for 1024 slots where each reperesents 1/1024 of the reference. Last slot has issues
-        // https://forum.arduino.cc/index.php?topic=303189.0        
-        if (adc_index < 2)
+        if (adc_index == PV_I)
         {
-            printf_P(PSTR("\"%1.2f\","),(analogRead(adc_index)*5.0/1024.0));
-        }
-
-        // CCtest board has a 50V/V current sense amp to a high side 0.068 Ohm to measure PV current.
-        if (adc_index == 2) 
-        {
-            if (PV_I > 0.005)
+            if (pv_i > 0.001)
             {
-                printf_P(PSTR("\"%1.3f\","),PV_I);
+                printf_P(PSTR("\"%1.3f\","),pv_i);
             }
         }
 
-        // CCtest board has a 50V/V current sense amp to a high side 0.068 Ohm to measure battery charging.
-        if (adc_index == 3) 
+        if (adc_index == CHRG_I) 
         {
-            if (CHRG > 0.005)
+            if (chrg_i > 0.002)
             {
-                printf_P(PSTR("\"%1.3f\","),CHRG);
+                printf_P(PSTR("\"%1.3f\","),chrg_i);
             }
         }
 
-        // CCtest board has a 50V/V current sense amp to a high side 0.068 Ohm to measure battery discharg.
-        if (adc_index == 4) 
+        if (adc_index == DISCHRG_I) 
         {
-            if (DISCHRG > 0.005)
+            if (dischrg_i > 0.002)
             {
-                printf_P(PSTR("\"%1.3f\","),DISCHRG);
+                printf_P(PSTR("\"%1.3f\","),dischrg_i);
             }
-        }
-
-        // Irrigate7 has a 100k and 5.62k  voltage divider on the solenoid boost converter. The BOOST goes through a 100k  to ADC5 and a 5.62k to ground.
-        if (adc_index == 5) 
-        {
-            //printf_P(PSTR("\"%1.2f\","),BOOST);
         }
         
-        // Irrigate7 has a 432k and 100k voltage divider from the solar input. The PV goes through a 432k  to ADC6 and a 100k to ground.
-        if (adc_index == 6) 
+        if (adc_index == PV_V) 
         {
-            printf_P(PSTR("\"%1.2f\","),PV_IN);
+            printf_P(PSTR("\"%1.2f\","),pv_v);
         }
 
-        // Irrigate7 has a 100 and 200k voltage divider from the battery(PWR). The PWR goes through a 100k  to ADC7 and a 200k to ground.
-        if (adc_index == 7) 
+        if (adc_index == PWR_V)
         {
-            printf_P(PSTR("\"%1.2f\","),PWR);
+            printf_P(PSTR("\"%1.2f\","),pwr_v);
         }
 
         if ( (adc_index+1) > END_CHANNEL) 
@@ -360,12 +333,12 @@ void CCtest(void)
     // check if at a load change condition
     else if ( command_done == 18 )
     {
-        PWR = analogRead(7)*(5.0/1024.0)*(3.0/2.0);
-        PV_IN = analogRead(6)*(5.0/1024.0)*(532.0/100.0);
-        PV_I = analogRead(2)*(5.0/1024.0)/(0.068*50.0);
-        CHRG = analogRead(3)*(5.0/1024.0)/(0.068*50.0);
-        DISCHRG = analogRead(4)*(5.0/1024.0)/(0.068*50.0);
-        BOOST = analogRead(5)*(5.0/1024.0)*(105.62/5.62);
+        pwr_v = analogRead(PWR_V)*(5.0/1024.0)*(3.0/2.0);
+        pv_v = analogRead(PV_V)*(5.0/1024.0)*(532.0/100.0);
+        pv_i = analogRead(PV_I)*(5.0/1024.0)/(0.068*50.0);
+        chrg_i = analogRead(CHRG_I)*(5.0/1024.0)/(0.068*50.0);
+        dischrg_i = analogRead(DISCHRG_I)*(5.0/1024.0)/(0.068*50.0);
+        boost_v = analogRead(BOOST_V)*(5.0/1024.0)*(105.62/5.62);
         
         // absorption
         if (absorption)
@@ -377,7 +350,7 @@ void CCtest(void)
         else if ( (step_index+1) > end_ld_step) 
         {
             // max load needs to end when battery voltage has discharged to the setpoint 
-            if ( ( PWR < (bat_discharge/1000.0) ) && (PWR > 4.0) )
+            if ( ( pwr_v < (bat_discharge/1000.0) ) && (pwr_v > 4.0) )
             {
                 step_index = start_ld_step;
                 load_step(step_index);
@@ -393,7 +366,7 @@ void CCtest(void)
             }
 
             // report at voltage levels
-            else if ( ( PWR < bat_report ) && (PWR > 4.0) )
+            else if ( ( pwr_v < bat_report ) && (pwr_v > 4.0) )
             {
                 command_done = 20;
                 bat_report = bat_report - DISCHARGE_STEP/1000.0;
@@ -407,7 +380,7 @@ void CCtest(void)
             }                
             // If LT3652 is enabled then the MPPT mode can be used to wait
             // for CV (aka float) mode
-            else if ( (PV_IN > 19.0 ) && ( (arg_count == 0) || (arg_count == 3) ) )
+            else if ( (pv_v > 18.0 ) && ( (arg_count == 0) || (arg_count == 3) ) )
             {
                 // shutdown PV so the the full discharge load is shown for each step
                 if ( (step_index == start_ld_step) && (digitalRead(SHUTDOWN) == LOW) && (!runtest) )
@@ -440,10 +413,10 @@ void CCtest(void)
         if ( (arg_count == 0) || (arg_count == 3) )
         {
             // verify LT3652 gets into MPPT mode so that charging is not skiped
-            // note PV_I, CHRG, are huge when MPPT starts with my bench supply
-            // also DISCHRG is zip when MPPT has got going, but I want to see the old value
-            PV_IN = analogRead(6)*(5.0/1024.0)*(532.0/100.0);
-            if ( (PV_IN > 16.0 ) &&  (PV_IN < 17.0 ))
+            // note PV_I and CHRG_I, are huge when MPPT mode starts on my bench supply because it has a large bult capacitor to pull down.
+            // also DISCHRG is nil when MPPT has got going, but I want to report the old value
+            pv_v = analogRead(PV_V)*(5.0/1024.0)*(532.0/100.0);
+            if ( (pv_v > 16.0 ) &&  (pv_v < 17.0 ))
             {
                 printf_P(PSTR("{\"rpt\":\"VerifyMPPT\"}\r\n"));
                 command_done = 20;
@@ -497,8 +470,8 @@ void CCtest(void)
         if ( (arg_count == 0) || (arg_count == 3) )
         {
             // wait for night to start load
-            PV_IN = analogRead(6)*(5.0/1024.0)*(532.0/100.0);
-            if ( (PV_IN > 0.0 ) &&  (PV_IN < 5.0 ))
+            pv_v = analogRead(PV_V)*(5.0/1024.0)*(532.0/100.0);
+            if ( (pv_v > 0.0 ) &&  (pv_v < 5.0 ))
             {
                 printf_P(PSTR("{\"rpt\":\"VerifyNight\"}\r\n"));
                 
@@ -520,7 +493,7 @@ void CCtest(void)
 
     else
     {
-        printf_P(PSTR("{\"err\":\"AdcCmdDoneWTF\"}\r\n"));
+        printf_P(PSTR("{\"err\":\"CmdDoneWTF\"}\r\n"));
         initCommandBuffer();
     }
 }

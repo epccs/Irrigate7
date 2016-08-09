@@ -48,7 +48,7 @@ $(TARGET).hex: $(TARGET).elf
 ## dragon: -c dragon_isp -P usb
 ## to reduce dupliction I only show the fuse setting in ../Bootloader
 
-## lock the bootloader section after flashing, it does not stop isp when bootloader is not used
+## Program with an ISP. locking the bootloader section, is a good idea even if it is not used
 isp: $(TARGET).hex
 	avrdude -v -p $(MCU) -c stk500v1 -P $(ISP_PORT) -b 19200 -e -U flash:w:$(TARGET).hex -U lock:w:0x2f:m
 

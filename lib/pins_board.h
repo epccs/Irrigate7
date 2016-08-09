@@ -1,5 +1,5 @@
 /*
- * Pin definitions for use with DigitalIO library
+ * Pin definitions for Irrigate7 used with pin_num.h Digital IO library
  * Copyright (C) 2016 Ronald Sutherland
  *
  * This Library is free software: you can redistribute it and/or modify
@@ -20,10 +20,10 @@
 
 #define NUM_DIGITAL_PINS            32
 #define NUM_ANALOG_INPUTS        8
-// only pin 11 has pwm and can be used as a digital output so I do not list the others
-#define digitalPinHasPWM(p)         ((p) == 11 )
+// only pin 11 has pwm and can be used as a digital output so I did not list the others
+#define digitalPinHasPWM(p)         ((p) == 11)
 
-// JTAG lines
+// JTAG on Irrigate7 (make sure to lift the resistors that connect to the LT3652 if you use JTAG)
 #define TDI 16
 #define TDO 17
 #define TMS 18
@@ -34,23 +34,48 @@
 #define DISCONNECT TDO
 #define FAULT TMS
 
-//#define LED_BUILTIN = 13; // Irrigate7's LED has to do with Boost operaiton, it is not a on/off control
+// Irrigate7 board has no led but this is the normal place it would be found
+#define LED_BUILTIN 13 
 
-// SPI is not free to use on Irrigate7 (e.g. MOSI is  ICP3, which is used for flow meter)
+// UART for serial communication (do not use these doing so will conflict with uart.c and uart.h)
+#define RX0 0 
+#define TX0 1
+
+// SPI is not open on Irrigate7 (e.g. MOSI is ICP3 which is used for the flow meter)
 #define SS 5
 #define MOSI 14
 #define MISO 12
 #define SCK  13
 
+// I2C on Irrigate7
 #define SDA 20
 #define SCL 21
 
-// these are ADC channels, they do not have digital IO function on ATmega328p
-// Irrigate7 has a 100k and 5.62k  voltage divider on the solenoid boost converter.
-#define BOOST_ADC5 5
-// Irrigate7 has a 432k and 100k voltage divider from the solar input.
-#define PV_IN_ADC6 6
-// Irrigate7 has a 100 and 200k voltage divider from the battery(PWR)
-#define PWR_ADC7 7
+// Sensor Loop
+#define LOOP_EN 5
+#define LOOP_ADDR2 7
+#define LOOP_ADDR1 15
+#define LOOP_ADDR0 16
+
+// ADC channels
+// There are values from 0 to 1023 for 1024 slots where each reperesents 1/1024 of the reference. Last slot has issues
+// https://forum.arduino.cc/index.php?topic=303189.0
+
+// PV_I_ADC1 is a high side current sense on CCtest board
+// PV_I_ADC1 voltage is analogRead(PV_I)*(5.0/1024.0)/(0.068*50.0)
+#define PV_I 2
+
+// CHRG_ADC2 voltage is analogRead(CHRG_I)*(5.0/1024.0)/(0.068*50.0)
+#define CHRG_I 3
+
+// DISCHRG_ADC3 voltage is analogRead(DISCHRG_I)*(5.0/1024.0)/(0.068*50.0)
+#define DISCHRG_I 4
+
+// BOOST voltage from solenoid boost converter is analogRead(BOOST_V)*(5.0/1024.0)*(105.62/5.62).
+#define BOOST_V 5
+// PV_IN voltage is analogRead(PV_IN_ADC6)*(5.0/1024.0)*(532.0/100.0)
+#define PV_V 6
+// PWR or Battery voltage is analogRead(PWR_ADC7)*(5.0/1024.0)*(3.0/2.0)
+#define PWR_V 7
 
 #endif // Pins_Board_h

@@ -1,41 +1,39 @@
-# AVR EEPROM
+# Select Loop Power
 
 ## Overview
 
-Eeprom is an interactive command line program that demonstrates the control of an ATmega1284p EEPROM.
+Irrigate7 has eight current loops for pulse transmission that are terminated with a 100 Ohm resistor. Each loop is selectable when a 74HC238 is addressed and its address line is used to pull down the gate of a PMOS that then allows a current source to power the loop. Each loop termination is used to turn on an open collector connected to ICP1 (only one loop can be powered at a time).
 
-Depends on avr/eeprom.h from avr-libc <http://www.nongnu.org/avr-libc/user-manual/group__avr__eeprom.html>.
 
 For how I setup my Makefile toolchain <http://epccs.org/indexes/Document/DvlpNotes/LinuxBoxCrossCompiler.html>.
 
 With a serial port connection (set the BOOT_PORT in Makefile) and optiboot installed on the RPUno run 'make bootload' and it should compile and then flash the MCU.
 
 ``` 
-rsutherland@conversion:~/Samba/Irrigate7/Eeprom$ make bootload
+rsutherland@conversion:~/Samba/Irrigate7/LoopPwr$ make bootload
 avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o main.o main.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ee.o ee.c
+avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o loop_pwr.o loop_pwr.c
 avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../Uart/id.o ../Uart/id.c
 avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/timers.o ../lib/timers.c
 avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/uart.o ../lib/uart.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/adc.o ../lib/adc.c
 avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/parse.o ../lib/parse.c
-avr-gcc -Wl,-Map,Eeprom.map  -Wl,--gc-sections  -Wl,-u,vfprintf -lprintf_flt -lm -mmcu=atmega1284p main.o ee.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/adc.o ../lib/parse.o -o Eeprom.elf
-avr-size -C --mcu=atmega1284p Eeprom.elf
+avr-gcc -Wl,-Map,LoopPwr.map  -Wl,--gc-sections  -Wl,-u,vfprintf -lprintf_flt -lm -mmcu=atmega1284p main.o loop_pwr.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/parse.o -o LoopPwr.elf
+avr-size -C --mcu=atmega1284p LoopPwr.elf
 AVR Memory Usage
 ----------------
 Device: atmega1284p
 
-Program:    7696 bytes (5.9% Full)
+Program:    7160 bytes (5.5% Full)
 (.text + .data + .bootloader)
 
-Data:        177 bytes (1.1% Full)
+Data:        156 bytes (1.0% Full)
 (.data + .bss + .noinit)
 
 
-rm -f Eeprom.o main.o ee.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/adc.o ../lib/parse.o
-avr-objcopy -j .text -j .data -O ihex Eeprom.elf Eeprom.hex
-rm -f Eeprom.elf
-avrdude -v -p atmega1284p -c avr109 -P /dev/ttyUSB0 -b 115200 -e -u -U flash:w:Eeprom.hex
+rm -f LoopPwr.o main.o loop_pwr.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/parse.o
+avr-objcopy -j .text -j .data -O ihex LoopPwr.elf LoopPwr.hex
+rm -f LoopPwr.elf
+avrdude -v -p atmega1284p -c avr109 -P /dev/ttyUSB0 -b 115200 -e -u -U flash:w:LoopPwr.hex
 
 avrdude: Version 6.2
          Copyright (c) 2000-2005 Brian Dean, http://www.bdmicro.com/
@@ -96,34 +94,40 @@ Reading | ################################################## | 100% 0.00s
 
 avrdude: Device signature = 0x1e9705 (probably m1284p)
 avrdude: erasing chip
-avrdude: reading input file "Eeprom.hex"
-avrdude: input file Eeprom.hex auto detected as Intel Hex
-avrdude: writing flash (7696 bytes):
+avrdude: reading input file "LoopPwr.hex"
+avrdude: input file LoopPwr.hex auto detected as Intel Hex
+avrdude: writing flash (7160 bytes):
 
-Writing | ################################################## | 100% 1.06s
+Writing | ################################################## | 100% 0.95s
 
-avrdude: 7696 bytes of flash written
-avrdude: verifying flash memory against Eeprom.hex:
-avrdude: load data flash data from input file Eeprom.hex:
-avrdude: input file Eeprom.hex auto detected as Intel Hex
-avrdude: input file Eeprom.hex contains 7696 bytes
+avrdude: 7160 bytes of flash written
+avrdude: verifying flash memory against LoopPwr.hex:
+avrdude: load data flash data from input file LoopPwr.hex:
+avrdude: input file LoopPwr.hex auto detected as Intel Hex
+avrdude: input file LoopPwr.hex contains 7160 bytes
 avrdude: reading on-chip flash data:
 
-Reading | ################################################## | 100% 0.78s
+Reading | ################################################## | 100% 0.76s
 
 avrdude: verifying ...
-avrdude: 7696 bytes of flash verified
+avrdude: 7160 bytes of flash verified
 
 avrdude done.  Thank you.
 ``` 
 
 Now connect with picocom (or ilk). Note I am often at another computer doing this through SSH. The Samba folder is for editing the files from Windows.
 
-
 ``` 
 #exit is C-a, C-x
 picocom -b 115200 /dev/ttyUSB0
 ``` 
+
+or log the terminal session
+
+``` 
+script -f -c "picocom -b 115200 /dev/ttyUSB0" stuff.log
+``` 
+
 
 # Commands
 
@@ -135,25 +139,31 @@ identify
 
 ``` 
 /0/id?
-{"id":{"name":"Eeprom","desc":"Irrigate7 Board /w atmega1284p and LT3652","avr-gcc":"4.9"}}
+{"id":{"name":"LoopPwr","desc":"Irrigate7 Board /w atmega1284p and LT3652","avr-gcc":"4.9"}}
 ```
 
-##  /0/ee? 0..4095
+##  /0/addrloop 0..7
 
-Return the EEPROM value at address. This checks if eeprom_is_ready() befor trying to read the EEPROM, if it is not ready the program loops back through the round robin where a received charactor may terminate the command. 
+Set loop address to power for ICP1 event capture.
 
 ``` 
-/0/ee? 0
-{"EE[0]":"255"}
+/0/addrloop 0
+{"PC7":"0","PC6":"0","PC5":"0"}
+/0/addrloop 7
+{"PC7":"1","PC6":"1","PC5":"1"}
 ```
 
-##  /0/ee 0..1023,0..255
+##  /0/enloop true|false
 
-Write the value given as argument one to the address given as Argument zero. This checks if eeprom_is_ready() befor trying to write to the EEPROM, if it is not ready the program loops back through the round robin where a received charactor may terminate the command. If the command is terminated the write may not occure. The JSON response is a read of the EEPROM. 
-
-Warning writing EEPROM can lead to device failure, it is only rated for 100k write cycles.
+Enable power to loop address.
 
 ``` 
-/0/ee 0,16
-{"EE[0]":"16"}
+/0/enloop 1
+{"PB4":"1"}
 ```
+
+# Notes
+
+The loop is used to transmit pulse edges that can be captured with ICP1.
+
+Transmission of the oscilator events from a capacitive sensor used in a simple timing circuit has yet to gain acceptance. The input capture software is consideralby more difficult than the analog conversion typicaly attepmted with these sort of projects. Guess I am trying to say "Here be Dragons".  

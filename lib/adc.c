@@ -31,7 +31,8 @@ static uint8_t free_running;
 ISR(ADC_vect){
     // ADCL contain lower 8 bits, ADCH upper (two bits)
     // Must read ADCL first
-    adc[adc_channel] = ADCL | (ADCH << 8);
+    adc[adc_channel] = ADC;
+    // adc[adc_channel] = ADCL | (ADCH << 8);
 
     ++adc_channel;
     if (adc_channel >= ADC_CHANNELS) 

@@ -1,17 +1,14 @@
-![EPCCS.ORG Logo](http://epccs.org/indexes/Document/Logo/Documents/HeaderName.jpg "EPCCS.ORG Logo")
-# Software for Irrigate7 which has an ATmega1284p
+# Irrigate7 has an ATmega1284p with on-board solar charge controller
 
-From <http://epccs.org/hg/open/Irrigate7>
+![Status](https://raw.githubusercontent.com/epccs/Irrigate7/master/Hardware/status_icon.png "Status")
 
-![Status](http://epccs.org/indexes/Board/Irrigate7/status_icon.png "Irrigate7 Status")
+From <https://github.com/epccs/Irrigate7/>
 
-The Board is an ATmega1284p with an LT3652 solar charge controller and Arduino Uno R3 pin compatible header. It does not have USB.
+The Board has an easy to use MCU, seven Latching Solenoid Drivers, and a LT3652 solar charge controller. It does not have USB or an LED.
 
-![Schematic](http://epccs.org/indexes/Board/Irrigate7/Documents/14320,Schematic.png "Irrigate7 Schematic")
+![Schematic](https://raw.githubusercontent.com/epccs/RPUno/master/Hardware/14320,Schematic.png "Irrigate7 Schematic")
 
-![Schematic2](http://epccs.org/indexes/Board/Irrigate7/Documents/14320,Schematic2.png "Irrigate7 Schematic2")
+![Schematic](https://raw.githubusercontent.com/epccs/RPUno/master/Hardware/14320,Schematic2.png "Irrigate7 Schematic2")
 
-[Irrigate7](http://epccs.org/indexes/Board/Irrigate7/) Board development and hardware.
-
-This repository uses Makefiles. The toolchain setup is <http://epccs.org/indexes/Document/DvlpNotes/LinuxBoxCrossCompiler.html>. 
+The core files are in the /lib folder while each example has its own Makefile.
 

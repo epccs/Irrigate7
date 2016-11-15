@@ -42,7 +42,7 @@
 #define TX0 1
 
 // SPI is not open on Irrigate7 (e.g. MOSI is ICP3 which is used for the flow meter)
-#define SS 5
+#define nSS 5
 #define MOSI 14
 #define MISO 12
 #define SCK  13

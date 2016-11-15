@@ -14,10 +14,10 @@ int main(void)
     digitalWrite(LED_BUILTIN, HIGH);  
 
     // The UART is not used hear, but the RPUadpt shield I use for 
-    // uploading firmware needs RX line set high to turn off the 
+    // uploading firmware needs the TX line set high to turn off the 
     // RS-422 driver. 
-    pinMode(RX0,OUTPUT);
-    digitalWrite(RX0,HIGH);
+    pinMode(TX0,OUTPUT);
+    digitalWrite(TX0,HIGH);
 
     initTimers(); //Timer0 Fast PWM mode, Timer1 & Timer2 Phase Correct PWM mode.
 
@@ -31,12 +31,12 @@ int main(void)
         
         kRuntime = millis() - blink_started_at;
         
-        if (kRuntime > 1000) 
+        if (kRuntime > 200) 
         {
             digitalToggle(LED_BUILTIN);
             
             // next toggle 
-            blink_started_at += 1000; 
+            blink_started_at += 200; 
         }
     } 
 }

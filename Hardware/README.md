@@ -6,6 +6,8 @@ Eagle Files, BOM, Status, and how to Test.
 
 ![Schematic](https://raw.githubusercontent.com/epccs/Irrigate7/master/Hardware/14320,Schematic.png "Irrigate7 Schematic")
 
+![Schematic](https://raw.githubusercontent.com/epccs/Irrigate7/master/Hardware/14320,Schematic2.png "Irrigate7 Schematic2")
+
 # Notes
 
 ```

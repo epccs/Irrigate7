@@ -24,7 +24,7 @@ A serial bus that allows multiple microcontroller boards to be connected to a ho
 
 ![MultiDrop](./Hardware/Documents/MultiDrop.png "RPUno MultiDrop")
 
-The host computer is able to use it's common serial port programs (e.g. avrdude, PySerial, picocom...) when communicating with the ATmega1284p, and the MCU can use common UART control libraries (e.g. Arduino Uno core) to communicate with the host. It is important to understand that these programs don't need to known how to control the transceivers as would be necessary for half duplex communication (e.g. RS-485). RS-422 with the transceivers automatically activated can work with the common UART libraries and host programs for RS-232 so common serial bootloaders can work as expected and so can the other serial programs (e.g. picocom and PySerial). 
+The host computer is able to use it's RS-232 serial port programs (e.g. avrdude, PySerial, picocom...) when communicating with the ATmega1284p, and the MCU can use RS-232 UART control libraries (e.g. like the Arduino Uno core) to communicate with the host. These programs don't need to known how to control the differential transceivers as would normally be necessary. In part because RS-422 is full duplex like RS-232, but also the transceivers are automatically activated. The common UART libraries and host programs (e.g. picocom and PySerial) were done for RS-232, but RS-485 is a half duplex communication, so it is like a push to talk radio. Serial bootloaders like optiboot and xboot work well with avrdude over RS-232, and over RS-422 in a point to point mode with automatically activated transceivers. 
 
 I prefer a Command Line Interface (CLI), so that is what the examples use. The CLI is programmed to respond to commands terminated with a newline, so remember to press enter (which sends a newline) before starting a command. The command includes an address with a leading and trailing forward slash "/". The command echo starts after the address (second byte) is sent. The first byte ('/') will cause any transmitting device to stop and dump its outgoing buffer which should prevent collisions since the echo is delayed until after the second byte. 
 
@@ -80,4 +80,4 @@ git clone https://github.com/epccs/Irrigate7
 * [avr-libc](http://packages.ubuntu.com/search?keywords=avr-libc)
 * [avrdude](http://packages.ubuntu.com/search?keywords=avrdude)
 
-I am better with hardware than software. I hope the software can act as a guide, it is in C because that is what I found works for me.
+I hope the software can act as a guide, it is in C because that is what I found works for me.

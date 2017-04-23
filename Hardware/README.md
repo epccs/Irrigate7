@@ -16,11 +16,11 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
         12V SLA with an LT3652 solar charge controller 
         High side battery current sensing ADC2 (Charging) and ADC3 (Discharging).
         Vin power will automatically disconnect when the battery is low.
-        Six pluggable digital input/outputs (DIO 3,4,10,11,12,13) with level conversion clamped to Vin.
+        Seven pluggable digital input/outputs (DIO 2,3,4,10,11,12,13) with level conversion clamped to Vin.
         Digital interface has two 22 mA current source
         ICP3 for pulse input capacitive sensors e.g. LT or MT.
         ICP1 for flow meters.
-        Four Analog Loops each with current sources.
+        Four Analog Loops (ADC0, ADC1, ADC4, ADC6) each with current sources.
         Currrent sources are turned off with DIO (TBD).
         Power to the Shield Vin pin is turned off with DIO (TBD).
         MCU power (+5V) is converted with an SMPS from the battery power.
@@ -58,7 +58,7 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
 
 ```
         ^2  Done: 
-            WIP: Design, 
+            WIP: Design (schmatic showing is wip), 
             Todo: Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             Update DIN MNT, round sharp edges with a radius, swap connector numbers J4->J6-J7->J4, add TP4
@@ -68,9 +68,9 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
             High side battery current sensing like RPUno^6.
             Add 2x5 IDE plug interface for testing K7 and interfacing with CL8.
             Remove CL8 function (it will be an option with the CL8 board) and make ICP3 like ICP1 input.
-            Remove JTAG connector, but make sure the TP is available.
-            Place boost storage Cap on a pluggable connector.
-            Back port K3 board updates for use on Irrigate7, and contorl signals work with CL8 board.
+            Remove JTAG connector, use the IO for K7 and CL8 interface not PVCC.
+            Allow placing boost storage Cap on a pluggable connector.
+            Back port K3 board updates, and setup K7 contor to work with CL8 board.
 
         ^1  Done: Design, Layout, BOM, Review*, Order Boards, Assembly,
             WIP: Testing,

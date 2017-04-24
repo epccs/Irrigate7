@@ -57,9 +57,9 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
 ![Status](./status_icon.png "RPUno Status")
 
 ```
-        ^2  Done: 
-            WIP: Design (schmatic showing is wip), 
-            Todo: Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
+        ^2  Done: Design, 
+            WIP: Layout,
+            Todo:  BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             Update DIN MNT, round sharp edges with a radius, swap connector numbers J4->J6-J7->J4, add TP4
             Digital IO current limit resistor should go between K38 and MCU.

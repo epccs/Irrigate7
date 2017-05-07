@@ -15,24 +15,22 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
         ATmega1284p is a easy to use microcontroller
         12V SLA with an LT3652 solar charge controller 
         High side battery current sensing ADC2 (Charging) and ADC3 (Discharging).
-        Vin power will automatically disconnect when the battery is low.
-        Seven pluggable digital input/outputs (DIO 2,3,4,10,11,12,13) with level conversion clamped to Vin.
+        Vin power will automatically disconnect when the battery is low (about 11.58V).
+        Seven pluggable digital input/outputs (DIO 2,3,4,10,11,12,13) with level conversion and ESD clamped.
         Digital interface has two 22 mA current source
-        ICP3 for pulse input capacitive sensors e.g. LT or MT.
-        ICP1 for flow meters.
-        Four Analog Loops (ADC0, ADC1, ADC4, ADC6) each with current sources.
-        Currrent sources are turned off with DIO (TBD).
-        Power to the Shield Vin pin is turned off with DIO (TBD).
-        MCU power (+5V) is converted with an SMPS from the battery power.
+        ICP1, ICP3 for flow meter or pulse type capacitive sensors e.g. LT or MT.
+        Four Analog channels (ADC0, ADC1, ADC4, ADC6) each with 22mA current source for loop power.
+        Currrent sources are turned off with DIO 9.
+        Power to the Shield Vin pin is turned off with DIO 22.
+        MCU power (+5V) is from an SMPS converted from the battery power.
 ```
 
 ## Uses
 
 ```
-        General Purpose Solar Controller
+        Solar Powered Battery Backed General Purpose Controller
         Flow Meter Data Acquisition using Capture Hardware.
-        VIN to an RPUpi shield can be powered down while the Irrigate7 continues to run.
-        How much heat was gained from the rooftop hot water system.
+        SHLD_VIN to an RPUpi shield can be powered down while ATmega1284p continues to run.
 ```
 
 ## Notice
@@ -57,9 +55,9 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
 ![Status](./status_icon.png "RPUno Status")
 
 ```
-        ^2  Done: Design, 
-            WIP: Layout,
-            Todo:  BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
+        ^2  Done: Design, Layout,
+            WIP: BOM,
+            Todo:  Review*, Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             Update DIN MNT, round sharp edges with a radius, swap connector numbers J4->J6-J7->J4, add TP4
             Digital IO current limit resistor should go between K38 and MCU.
@@ -116,8 +114,7 @@ ANALOG: four ADC channels with MCU voltage used as the reference (or an internal
 ## Operating Temperature
 
 ```
-Charge control will shut down when outside 0 to 40 ºC
-Also refer to the parts used for storage and operation limits.
+TBD
 ```
 
 ## Mounting

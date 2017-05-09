@@ -55,9 +55,9 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
 ![Status](./status_icon.png "RPUno Status")
 
 ```
-        ^2  Done: Design, Layout,
-            WIP: BOM,
-            Todo:  Review*, Order Boards, Assembly, Testing, Evaluation.
+        ^2  Done: Design, Layout, BOM,
+            WIP: Review*,
+            Todo: Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             Update DIN MNT, round sharp edges with a radius, swap connector numbers J4->J6-J7->J4, add TP4
             Digital IO current limit resistor should go between K38 and MCU.
@@ -111,12 +111,6 @@ ANALOG CURR SOURCES four 20 mA sources from VIN which may feed 4-20mA sensors.
 ANALOG: four ADC channels with MCU voltage used as the reference (or an internal bandgap).
 ```
 
-## Operating Temperature
-
-```
-TBD
-```
-
 ## Mounting
 
 ```
@@ -136,7 +130,7 @@ Check correct assembly and function with [Testing](./Testing/)
 
 # Bill of Materials
 
-Import the [BOM](./Design/14320,BOM.csv) into LibreOffice Calc (or Excel) with semicolon separated values, or use a text editor.
+Import the [BOM](./Design/14320,BOM.csv) into LibreOffice Calc (or Excel), or use a text editor.
 
 
 # Assembly
@@ -163,3 +157,5 @@ Both are compensated with a 100k Thermistor which is placed on a short wire moun
 # How To Use
 
 TBD
+
+Warning: firmware examples for this board are for a previous version (^1) and may not work with this version.

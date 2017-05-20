@@ -68,7 +68,7 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
             Remove CL8 function (it will be an option with the CL8 board) and make ICP3 like ICP1 input.
             Remove JTAG connector, use the IO for K7 and CL8 interface not PVCC.
             Allow placing boost storage Cap on a pluggable connector.
-            Back port K3 board updates, and setup K7 contor to work with CL8 board.
+            Backport K3 board updates to the K7 control on this board and setup to work with CL8 board.
 
         ^1  Done: Design, Layout, BOM, Review*, Order Boards, Assembly,
             WIP: Testing,

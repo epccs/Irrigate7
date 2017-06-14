@@ -55,9 +55,9 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
 ![Status](./status_icon.png "RPUno Status")
 
 ```
-        ^2  Done: Design, Layout, BOM, Review*,
-            WIP: Order Boards,
-            Todo: Assembly, Testing, Evaluation.
+        ^2  Done: Design, Layout, BOM, Review*, Order Boards,
+            WIP: Assembly, 
+            Todo: Testing, Evaluation.
             *during review the Design may change without changing the revision.
             Update DIN MNT, round sharp edges with a radius, swap connector numbers J4->J6-J7->J4, add TP4
             Digital IO current limit resistor should go between K38 and MCU.
@@ -104,11 +104,13 @@ MCU type: ATmega1284p
 MCU clock: 16MHz
 MCU Voltage: 5V (e.g. IOREF is 5V)
 CAPTURE INPUT: ICP1, ICP3
-CAPTURE CURR SOURCE: 17mA.
-CAPTURE OC CURR SOURCE: 10mA used to feed an open collector sensor that can shunt it.
-DIGITAL: five level translated (to 5V) and ESD diode clamped input/outputs.
-ANALOG CURR SOURCES four 20 mA sources from VIN which may feed 4-20mA sensors.
-ANALOG: four ADC channels with MCU voltage used as the reference (or an internal bandgap).
+CAPTURE LOOP CURR SOURCE: two 17mA.
+CAPTURE OC CURR SOURCE: two 10mA used with an open collector sensor.
+DIGITAL: seven level translated (e.g. 12V from current source is safe, and will be translated to 5V for the MCU).
+DIGITAL CURR SOURCES: two 22 mA from the 12V power.
+ANALOG: four channels available to user (channels 0, 1, 4, 5)
+ANALOG REFERENCE: internal 1.1V bandgap, VACC pin of ATmega1284p is tied 5V from OKI-78SR-5.0 SMPS.
+ANALOG LOOP CURR SOURCES: four 22 mA from the 12V power.
 ```
 
 ## Mounting

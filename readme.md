@@ -4,7 +4,7 @@ From <https://github.com/epccs/Irrigate7/>
 
 ## Overview
 
-This Solar Powerd Programmable Controller board has pluggable connections for seven Latching Solenoid Drivers, seven digital I/O, two Input Capture, and four Analog inputs with current sources to power four loops. Use a 3W or 20W PV string of 36 cells to power the 12V SLA charge controller that includes simple battery management. 
+This Solar Powerd Programmable Controller board has pluggable connections for seven Latching Solenoid Drivers, seven digital I/O, two Input Capture, and four Analog inputs with current loop sources from the 12V SLA battery. Use a string of 36 silicon solar cells 3W through 20W (e.g. SLP003-12U through SLP020-12U) of power for the charge controller. 
 
 It is similar to the [RPUno] design but has some additional pluggable interfaces (e.g. IO2, ICP3, ADC4, ADC5). It's MCU is the ATmega1284p and has Arduino-style headers that work with the [RPUpi], [RPUftdi], or [RPUadpt] shields. The embedded LT3652 solar charge controller manages battery charging and the ATmega1284p interfaces with it (see Hardware for more details).
 
@@ -19,7 +19,7 @@ It is similar to the [RPUno] design but has some additional pluggable interfaces
 
 ## [Hardware](./Hardware)
 
-Hardware files and notes for referance.
+Hardware files include a schematic, bill of materials, and various notes for testing and evaluation. I think this is enough information to maintain the board should something go wrong, but I am willing to provide more on a case by case basis.
 
 ## Example with RPU BUS (RS-422)
 
@@ -78,7 +78,7 @@ When automation is used it is important to have very little framing error since 
 
 ## AVR toolchain
 
-The core files for this board are in the /lib folder. Each example has its files and a Makefile in its own folder. The toolchain packages that I use are available on Ubuntu and Raspbian. 
+The core files for this board are in the /lib folder. Each example has its files and a Makefile in its own folder. The toolchain is available as standard packages on Ubuntu and Raspbian. 
 
 ```
 sudo apt-get install git gcc-avr binutils-avr gdb-avr avr-libc avrdude
@@ -91,4 +91,4 @@ git clone https://github.com/epccs/Irrigate7
 * [avr-libc](http://packages.ubuntu.com/search?keywords=avr-libc)
 * [avrdude](http://packages.ubuntu.com/search?keywords=avrdude)
 
-I hope the software can act as a guide, it is in C because that is what I found works for me.
+The software is a guide, it is in C because that works for me.

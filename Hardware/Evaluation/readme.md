@@ -7,10 +7,26 @@ This shows the setup and method used for evaluation of Irrigate7.
 
 # Table Of Contents:
 
+6. ^2 RS422 Shield
+5. ^2 Lifting DIN Mount
 4. ^1 Sensor Loop Select
 3. ^1 CCtest
 2. ^1 With RPUftdi^2
 1. ^0A LT3652 Timer
+
+
+## ^2 RS422 Shield
+
+RPUpi and RPUadpt are RS422 shields that connect to controller boards serial (RX/TX) lines. The RPUpi crosses over the host computer (Pi Zero) serial lines to the RS422. As a result, the host can talk to both the ATmega1284p on Irrigate7 and the ATmega328p on RPUno through the multidrop interface. The microcontrollers are programmed with the GNU GCC toolchain for AVR which is available on Raspiban (an OS that runs on the Pi Zero). The toolchain can build firmware (projects) for both the RPUno and Irrigate7. 
+
+![Irrigate7^2 RS422](./Irrigat7^2,WithRPUpi^2_RS422to_RPUno^6_RPUadpt^5.jpg "Irrigate7^2 RS422")
+
+
+## ^2 Lifting DIN Mount
+
+A flat blade screwdriver is used to lift the DIN mount away from the rail, which is how almost all DIN systems work (though sometimes it is not this obvious).
+
+![Irrigate7^2 Lift DIN Mount](./14320^2,LiftingDinMount.jpg "Irrigate7^2 Lift DIN Mount")
 
 
 ## ^1 Sensor Loop Select

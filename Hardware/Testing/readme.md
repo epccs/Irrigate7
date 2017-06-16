@@ -24,7 +24,7 @@ This is a list of Test preformed on each Irrigate7 after assembly.
 
 ## Basics
 
-These tests are for an assembled Irrigate7 board 14320^1 which may be referred to as a Unit Under Test (UUT). If the UUT fails and can be reworked then do so, otherwise it needs to be scraped. 
+These tests are for an assembled Irrigate7 board 14320^2 which may be referred to as a Unit Under Test (UUT). If the UUT fails and can be reworked then do so, otherwise it needs to be scraped. 
 
 **Warning: never use a soldering iron to rework ceramic capacitors due to the thermal shock.**
     
@@ -47,12 +47,12 @@ The bottom pad on U1 dissipates heat as well as providing a ground, it is not co
 
 ## Reverse Battery Protection
 
-Apply a current limited (&lt;20mA) supply set with 14V to the +BAT and -BAT connector in reverse and verify that the voltage does not get through to TP4 (^4 PWR). Note some voltage (.2V) will be seen on TP4 because of how the shutdown through Q3 works.
+Apply a current limited (20mA) supply set with 14V to the +BAT and -BAT connector in reverse and verify that the voltage does not get through to TP4. Note some voltage (.2V) will be seen on TP4 because of how the shutdown through Q3 works.
     
 
 ## Battery Disconnect
 
-Apply a current limited (&lt;20mA) supply set with 14V to the +BAT and -BAT connector and verify that voltage does not get through to TP4. 
+Apply a current limited (20mA) supply set with 14V to the +BAT and -BAT connector and verify that voltage does not get through to TP4. 
 
 
 ## Power Protection
@@ -62,11 +62,11 @@ Apply a current limited (20mA) supply to the PV input with reverse polarity and 
 
 ## TPS3700 Window Comparator 
 
-Apply a current limited (&lt;30mA) supply starting at 12V to the +BAT and -BAT connector. Connect 1k ohm between U2 pin 1 and pin 2 to give the VIN latch a load. Short S2 and then release it, which will force the battery to connect. Check that PWR has been latched to the battery with TP4 and that the VIN latch has not set with U2 pin 1. Increase the supply slowly until VIN on U2 pin 1 has power, but no more than 14V. This is the voltage at which the load connects, and should be about 13.1V. Now slowly reduce the supply until the LED turns off. This is the voltage at which the battery disconnects and should be about 11.58V.
+Apply a current limited (30mA) supply starting at 12V to the +BAT and -BAT connector. Connect 1k ohm between U2 pin 1 and pin 2 to give the VIN latch a load. Short J22 pin 2 and pin 3, then release the short, which will force the battery to connect. Check that PWR has been latched to the battery with TP4 and that the VIN latch has not set with U2 pin 1. Increase the supply slowly until VIN on U2 pin 1 has power, but no more than 14V. This is the voltage at which the load connects, and should be about 13.1V. Now slowly reduce the supply until the LED turns off. This is the voltage at which the battery disconnects and should be about 11.58V.
 
 ```
-{ "LOAD_CONNNECT":[],
-  "DISCONNECT":[] }
+{ "LOAD_CONNNECT":[13.03,],
+  "DISCONNECT":[11.47,] }
 ```
 
 
@@ -77,7 +77,7 @@ Connect 100 kOhm resistor to both the PV side and BAT side thermistor inputs to 
 NOTE: the LT3652 goes into fault when started into my HP6050A in CC mode, which is by design. I can start the LT3652 with the load off, or in CV mode and then switch to CC. This note is to remind me that it is an expected behavior.
 
 ```
-{ "VIN@100K":[] }
+{ "VIN@100K":[13.60,] }
 ```
 
 
@@ -86,26 +86,28 @@ NOTE: the LT3652 goes into fault when started into my HP6050A in CC mode, which 
 Connect 100 kOhm resistor to both the PV side and BAT side thermistor inputs to simulate room temperature. Connect an electronic load to the +BAT and -BAT. Connect 1k ohm between U2 pin 1 and pin 2 to give the VIN latch a small load. Set the electronic load voltage to 12.8V to simulate a battery. Connect +PV and -PV to a CC/CV mode supply with CC set at 50mA and  CV set at 0V. Apply power and increase the CV setting to 21V. Verify the solar power point voltage is about 16.9V, increase the supply current CC to 150mA and measure the power point voltage. Next increase the supply CC setting until its voltage increases to 21V, e.g. the supply changes from CC to CV mode, and check that the charge controller is current limiting at about 1.3A with 0R068 placed on R3, also check if U1 (LT3652) is getting hot. Note that the voltage at UUT is higher than at the load because the wires drop some voltage (the load is still running at the 12.8V). 
 
 ```
-{ "PP100K@150mA&amp;12V8":[],
-  "CURR_LIMIT":[] }
+{ "PP100K@150mA&amp;12V8":[16.89,],
+  "CURR_LIMIT":[1.33] }
 ```
 
 
 ## Bias +5V
 
-Apply a 30mA current limited 5V source to +5V (J7 pin 6 and pin 5). Check that the input current is for a blank MCU (e.g. less than 5mA). Turn off the power.
+Apply a 30mA current limited 5V source to +5V (J10 pin 4 and pin 3). Check that the input current is for a blank MCU (e.g. less than 5mA). Turn off the power.
 
 ```
-{ "I_IN_BLANKMCU_mA":[]}
+{ "I_IN_BLANKMCU_mA":[3.6,]}
 ```
+
+Note if the fuse need set back to the factory (OEM) values there is a make rule, but VIN needs to be jumperd to +5V for the ICSP tool to work (the ESD_NODE needs bias for SCK on the tool to work).
 
 
 ## Set MCU Fuse and Install Bootloader
 
-Add U2 to the board now. Measurement of the input current is for referance (takes a long time to settle, 10mA ICP1 jumper is off).
+Add U2 to the board now. Also jumper VIN on U2 pin 1 to +5V to bias the EDS_NODE. Apply a 60mA current limited 5V source to +5V (J10 pin 4 and pin 3). Measure the input current for referance (it takes time to settle, both 10mA ICP1 and ICP3 jumper is off).
 
 ```
-{ "I_IN_BLANKMCU_WITH_U2_mA":[]}
+{ "I_IN_BLANKMCU_WITH_U2_mA":[5.4,]}
 ```
 
 Install Git and AVR toolchain on Ubuntu (16.04, on an old computer try https://wiki.ubuntu.com/Lubuntu). 
@@ -114,15 +116,15 @@ Install Git and AVR toolchain on Ubuntu (16.04, on an old computer try https://w
 sudo apt-get install git gcc-avr binutils-avr gdb-avr avr-libc avrdude
 ```
 
-Clone the RPUadpt repository.
+Clone the Irrigat7 repository.
 
 ```
 cd ~
-git clone https://github.com/epccs/RPUno
-cd ~/RPUno/Bootloader
+git clone https://github.com/epccs/Irrigat7
+cd ~/Irrigat7/Bootloader
 ```
 
-Connect a 5V supply with CC mode set at 30mA to the +5V (J7 pin 6) and  0V (J7 pin 5). Connect the ICSP tool (J11). The MCU needs its fuses set, so run the Makefile rule to do that. 
+Connect a 5V supply with CC mode set at 30mA to the +5V (J10 pin 4) and  0V (J10 pin 3). Connect the ICSP tool (J17). The MCU needs its fuses set, so run the Makefile rule to do that. 
 
 ```
 make fuse
@@ -141,24 +143,9 @@ Disconnect the ICSP tool and measure the input current, wait for the power to be
 ```
 
 
-## Current Sources
-
-Connect 100 kOhm resistor to both the PV side and BAT side thermistor inputs to simulate room temperature. Connect an 12V SLA battery to the +BAT and -BAT. Connect +PV and -PV to a CC/CV mode supply with CC set at 150mA and  CV set at 0V. Connect a 10k Ohm pull-up resistor from IO9 (J10 pin 9) to +5V. Apply power and increase the CV setting to 21V. Use a DMM to measure the 22mA current source for A0 from J4.1 to J4.3 (V0) and A1 from J4.5 to J4.3. Pulse Loop 17mA source, and Pulse Pull 10mA pull up current source. Digital IO 22mA current source. 
-    
-```
-{ "22MA_A0":[],
-  "22MA_A1":[],
-  "17MA_PL":[],
-  "10MA_PL":[],
-  "22MA_IO":[]}
-```
-
-NOTE: IO9 needs to be pulled up to 5V, the pin is floating when the MCU is not programmed to control it.
-
-
 ## Self Test
 
-Plug an [RPUftdi] shield with [Host2Remote] firmware onto an [RPUno] board (not the UUT but a separate board) and load [I2C-Debug] on it.
+Plug an [RPUftdi] shield with [Host2Remote] firmware onto an [RPUno] board and load [I2C-Debug] on it.
 
 [RPUftdi]: https://github.com/epccs/RPUftdi
 [Host2Remote]: https://github.com/epccs/RPUftdi/tree/master/Host2Remote

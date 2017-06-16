@@ -33,5 +33,8 @@ verify:
 	avrdude -v -p atmega1284p -c stk500v1 -P /dev/ttyACM0 -b 19200  -U flash:v:xboot_avr109_irrigate7.hex
 ##avrdude -v -p atmega1284p -c dragon_isp -P usb  -U flash:v:optiboot_atmega1284p.hex
 
-## hex is from https://github.com/epccs/Arduino-stk500v2-bootloader/
+## set fuse like they are from factory
+oem: 
+	avrdude -v -p atmega1284p -c stk500v1 -P /dev/ttyACM0 -b 19200 -e -U lock:w:0x3f:m -U lfuse:w:0x42:m -U hfuse:w:0x99:m -U efuse:w:0xFF:m
+
 ## funny thing: AVR dragon is fast on Ubuntu 16.04 but slow on Win 10 with Atmel Studio 7.0.943

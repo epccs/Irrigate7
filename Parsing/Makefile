@@ -1,12 +1,16 @@
 # Makefile 
 TARGET = Parsing
 LIBDIR = ../lib
-OBJECTS = main.o $(LIBDIR)/uart.o $(LIBDIR)/parse.o
+OBJECTS = main.o \
+	$(LIBDIR)/uart.o \
+	$(LIBDIR)/twi.o \
+	$(LIBDIR)/rpu_mgr.o \
+	$(LIBDIR)/parse.o
 
 ## Chip and project-specific global definitions
 MCU   =  atmega1284p
 F_CPU = 16000000UL  
-BAUD  =  9600UL
+BAUD  =  38400UL
 CPPFLAGS = -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) -I. 
 
 ## Cross-compilation

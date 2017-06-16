@@ -13,27 +13,38 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 For a copy of the GNU General Public License use
-http://www.gnu.org/licenses/gpl-2.0.html
-
-On Linux picocom can be used as a minimal serial terminal
-https://github.com/npat-efault/picocom
-
-picocom -b 9600 /dev/ttyUSB0
-exit is C-a, C-x
+http://www.gnu.org/licenses/gpl-2.0.html 
 */
 #include <avr/pgmspace.h>
 #include <util/atomic.h>
 #include "../lib/uart.h"
 #include "../lib/parse.h"
+#include "../lib/twi.h"
+#include "../lib/rpu_mgr.h"
+
+static char rpu_addr;
 
 int main(void) {    
 
     /* Initialize UART, it returns a pointer to FILE so redirect of stdin and stdout works*/
     stdout = stdin = uartstream0_init(BAUD);
     initCommandBuffer();
-       
+
+    /* Initialize I2C, with the internal pull-up*/
+    twi_init(TWI_PULLUP);
+
     sei(); // Enable global interrupts starts the UART
-    
+
+    // RPUftdi, RPUadpt, RPUpi have a bus manager with our bus addrss.
+    rpu_addr = get_Rpu_address();
+
+    // if the adddress fails to read then the bus manager will disconnect after time is given for bootload
+    if (rpu_addr == 0)
+    {
+        printf_P(PSTR("{\"err\":\"I2Cbad_UseAddr=0\"}\r\n"));
+        rpu_addr = '0'; // default allows it to work without a shield
+    }
+
     // non-blocking code in loop
     while(1) 
     {
@@ -44,7 +55,7 @@ int main(void) {
             AssembleCommand(getchar());
 
             // address is the ascii value for '0' note: a null address will terminate the command string. 
-            StartEchoWhenAddressed('0');
+            StartEchoWhenAddressed(rpu_addr);
         }
         
         // check if the character is available, and if so stop transmit and the command in process.

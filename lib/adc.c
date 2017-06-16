@@ -30,10 +30,10 @@ static uint8_t free_running;
 // Interrupt service routine for enable_ADC_auto_conversion
 ISR(ADC_vect){
     // ADCL contain lower 8 bits, ADCH upper (two bits)
-    // Must read ADCL first
+    // Must read ADCL first (news ADC is now defined for this)
     adc[adc_channel] = ADC;
-    // adc[adc_channel] = ADCL | (ADCH << 8);
-
+    //adc[adc_channel] = ADCL | (ADCH << 8);
+    
     ++adc_channel;
     if (adc_channel >= ADC_CHANNELS) 
     {
@@ -43,6 +43,7 @@ ISR(ADC_vect){
         {
             return;
         }
+
     }
 
 #if defined(ADMUX)
@@ -150,7 +151,7 @@ void enable_ADC_auto_conversion(uint8_t free_run)
     // clear ADATE, not Auto Trigger Enable
     // set ADIE, Interrupt Enable
     // set ADPS[2:0], Prescaler division factor (128, thus 16M/128 = 125kHz ADC clock)
-    // Note, the first instruction takes 25 ADC clocks to execute, next takes 13 clocks
+    // Note, the first reading takes 25 ADC clocks, the next takes 13 clocks
 #if defined(ADCSRA)
 	// set a2d prescaler so we are inside the desired 50-200 KHz range.
 	#if F_CPU >= 16000000 // 16 MHz / 128 = 125 KHz

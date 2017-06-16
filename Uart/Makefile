@@ -4,12 +4,15 @@ LIBDIR = ../lib
 OBJECTS = main.o \
 	id.o \
 	$(LIBDIR)/uart.o \
+	$(LIBDIR)/twi.o \
+	$(LIBDIR)/rpu_mgr.o \
+	$(LIBDIR)/timers.o \
 	$(LIBDIR)/parse.o
 
 ## Chip and project-specific global definitions
 MCU   =  atmega1284p
 F_CPU = 16000000UL  
-BAUD  =  115200UL
+BAUD  =  38400UL
 CPPFLAGS = -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) -I. 
 
 ## Cross-compilation
@@ -31,6 +34,10 @@ TARGET_ARCH = -mmcu=$(MCU)
 
 LDFLAGS = -Wl,-Map,$(TARGET).map 
 LDFLAGS += -Wl,--gc-sections 
+
+## printf() is one of the vfprintf() family of functions which does not implement floating point conversion by default
+## warning this takes about 2k of program space
+#LDFLAGS += -Wl,-u,vfprintf -lprintf_flt -lm
 
 all: $(TARGET).hex
 
@@ -55,7 +62,7 @@ bootload: $(TARGET).hex
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@
-	$(SIZE) -C --mcu=$(MCU) $@
+	$(SIZE) -C  --mcu=$(MCU) $@
 	rm -f $(TARGET).o $(OBJECTS)
 
 clean: 

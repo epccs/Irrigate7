@@ -115,11 +115,11 @@
 #define DISCHRG_I 3
 
 // ADC4 has a Plugable input with a 20mA current source
-// its voltage is analogRead(ADC0)*(5.0/1024.0)
+// its voltage is analogRead(ADC4)*(5.0/1024.0)
 #define ADC4 4
 
 // ADC5 has a Plugable input with a 20mA current source
-// its voltage is analogRead(ADC1)*(5.0/1024.0)
+// its voltage is analogRead(ADC5)*(5.0/1024.0)
 #define ADC5 5
 
 // PV_IN_ADC6 voltage is analogRead(PV_V)*(5.0/1024.0)*(532.0/100.0)

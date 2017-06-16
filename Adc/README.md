@@ -4,153 +4,120 @@
 
 Adc is an interactive command line program that demonstrates control of an ATmega1284p Analog-to-Digital Converter from pins PA0 through PA7. 
 
-The ADMUX values are somtimes confused with the pins but in this caser A0 is in fact on pin PA0 (A1 is on PA1, and so on). 
 
-For how I setup my Makefile toolchain <http://epccs.org/indexes/Document/DvlpNotes/LinuxBoxCrossCompiler.html>.
+# EEPROM Memory map 
+
+A map of calibration valuses in EEPROM. 
+
+```
+function            type        ee_addr:
+id                  UINT16      30
+ref_extern_avcc     UINT32      32
+ref_intern_1v1      UINT32      36
+```
+
+The AVCC pin is used to power the analog to digital converter and is also used as a reference. On RPUno the AVCC pin is powered by a switchmode supply that can be measured to use as a calibrated reference.
+
+The internal 1V1 bandgap is not trimmed by the manufacturer, so it is nearly useless until it is measured. However, once it is known it is a good reference.
+
+
+# Firmware Upload
 
 With a serial port connection (set the BOOT_PORT in Makefile) and optiboot installed on the RPUno run 'make bootload' and it should compile and then flash the MCU.
 
 ``` 
-rsutherland@conversion:~/Samba/RPUno/Adc$ make bootload
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o main.o main.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o analog.o analog.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../Uart/id.o ../Uart/id.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/timers.o ../lib/timers.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/uart.o ../lib/uart.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/adc.o ../lib/adc.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/parse.o ../lib/parse.c
-avr-gcc -Wl,-Map,Adc.map  -Wl,--gc-sections  -Wl,-u,vfprintf -lprintf_flt -lm -mmcu=atmega1284p main.o analog.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/adc.o ../lib/parse.o -o Adc.elf
-avr-size -C --mcu=atmega1284p Adc.elf
-AVR Memory Usage
-----------------
-Device: atmega1284p
-
-Program:    8386 bytes (6.4% Full)
-(.text + .data + .bootloader)
-
-Data:        180 bytes (1.1% Full)
-(.data + .bss + .noinit)
-
-
-rm -f Adc.o main.o analog.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/adc.o ../lib/parse.o
-avr-objcopy -j .text -j .data -O ihex Adc.elf Adc.hex
-rm -f Adc.elf
-avrdude -v -p atmega1284p -c avr109 -P /dev/ttyUSB0 -b 115200 -e -u -U flash:w:Adc.hex
-
-avrdude: Version 6.2
-         Copyright (c) 2000-2005 Brian Dean, http://www.bdmicro.com/
-         Copyright (c) 2007-2014 Joerg Wunsch
-
-         System wide configuration file is "/etc/avrdude.conf"
-         User configuration file is "/home/rsutherland/.avrduderc"
-         User configuration file does not exist or is not a regular file, skipping
-
-         Using Port                    : /dev/ttyUSB0
-         Using Programmer              : avr109
-         Overriding Baud Rate          : 115200
-         AVR Part                      : ATmega1284P
-         Chip Erase delay              : 55000 us
-         PAGEL                         : PD7
-         BS2                           : PA0
-         RESET disposition             : dedicated
-         RETRY pulse                   : SCK
-         serial program mode           : yes
-         parallel program mode         : yes
-         Timeout                       : 200
-         StabDelay                     : 100
-         CmdexeDelay                   : 25
-         SyncLoops                     : 32
-         ByteDelay                     : 0
-         PollIndex                     : 3
-         PollValue                     : 0x53
-         Memory Detail                 :
-
-                                  Block Poll               Page                       Polled
-           Memory Type Mode Delay Size  Indx Paged  Size   Size #Pages MinW  MaxW   ReadBack
-           ----------- ---- ----- ----- ---- ------ ------ ---- ------ ----- ----- ---------
-           eeprom        65    10   128    0 no       4096    8      0  9000  9000 0xff 0xff
-           flash         65    10   256    0 yes    131072  256    512  4500  4500 0xff 0xff
-           lock           0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
-           lfuse          0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
-           hfuse          0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
-           efuse          0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
-           signature      0     0     0    0 no          3    0      0     0     0 0x00 0x00
-           calibration    0     0     0    0 no          1    0      0     0     0 0x00 0x00
-
-         Programmer Type : butterfly
-         Description     : Atmel AppNote AVR109 Boot Loader
-
-Connecting to programmer: .
-Found programmer: Id = "XBoot++"; type = S
-    Software Version = 1.7; No Hardware Version given.
-Programmer supports auto addr increment.
-Programmer supports buffered memory access with buffersize=256 bytes.
-
-Programmer supports the following devices:
-    Device code: 0x7b
-
-avrdude: devcode selected: 0x7b
-avrdude: AVR device initialized and ready to accept instructions
-
-Reading | ################################################## | 100% 0.00s
-
-avrdude: Device signature = 0x1e9705 (probably m1284p)
-avrdude: erasing chip
-avrdude: reading input file "Adc.hex"
-avrdude: input file Adc.hex auto detected as Intel Hex
-avrdude: writing flash (8386 bytes):
-
-Writing | ################################################## | 100% 1.15s
-
-avrdude: 8386 bytes of flash written
-avrdude: verifying flash memory against Adc.hex:
-avrdude: load data flash data from input file Adc.hex:
-avrdude: input file Adc.hex auto detected as Intel Hex
-avrdude: input file Adc.hex contains 8386 bytes
-avrdude: reading on-chip flash data:
-
-Reading | ################################################## | 100% 0.83s
-
-avrdude: verifying ...
-avrdude: 8386 bytes of flash verified
-
+rsutherland@conversion:~/Samba/Irrigate7/Adc$ make bootload
+...
 avrdude done.  Thank you.
 ``` 
 
 Now connect with picocom (or ilk). Note I am often at another computer doing this through SSH. The Samba folder is for editing the files from Windows.
 
+
 ``` 
 #exit is C-a, C-x
-picocom -b 115200 /dev/ttyUSB0
+picocom -b 38400 /dev/ttyUSB0
 ``` 
 
 or log the terminal session
 
 ``` 
-script -f -c "picocom -b 115200 /dev/ttyUSB0" stuff.log
+script -f -c "picocom -b 38400 /dev/ttyUSB0" stuff.log
 ``` 
 
 
 # Commands
 
-Commands are interactive over the serial interface at 115200 baud rate. The echo will start after the second character of a new line.  
+Commands are interactive over the serial interface at 38400 baud rate. The echo will start after the second character of a new line. 
+
+
+## /[rpu_address]/[command [arg]]
+
+rpu_address is taken from the I2C address 0x29 (e.g. get_Rpu_address() which is included form ../Uart/id.h). The value of rpu_address is used as a character in a string, which means don't use a null value (C strings are null terminated), but the ASCII value for '1' (0x31) is easy and looks nice, though I fear it will cause some confusion when it is discovered that the actual address value is 49.
+
+Commands and their arguments follow.
+
 
 ## /0/id? [name|desc|avr-gcc]
 
 identify 
 
 ``` 
-/0/id?
+/1/id?
 {"id":{"name":"Adc","desc":"Irrigate7 Board /w atmega1284p and LT3652","avr-gcc":"4.9"}}
 ```
 
 ##  /0/analog? 0..7[,0..7[,0..7[,0..7[,0..7]]]]    
 
-Analog-to-Digital Converter reading from up to 5 ADMUX channels. The reading repeats until the Rx buffer gets a character. On Irrigate7 channel 5 is the solenoid boost converter, channel 6 is the solar input voltage, and channel 7 is the battery voltage.
+Analog-to-Digital Converter reading from up to 5 ADMUX channels. The reading repeats every 60 Seconds until the Rx buffer gets a character. On RPUno channel 6 is the solar input voltage, channel 7 is the main power node (PWR) voltage, channel 3 is the battery discharge current, channel 2 is the battery charging current, channel 0,1,4, and 5 are user inputs (example data is a floating input).
 
 ``` 
-/0/analog? 5,6,7
-{"BOOST":"4.68","PV_IN":"18.21","PWR":"6.78"}
-{"BOOST":"4.68","PV_IN":"18.21","PWR":"6.78"}
-{"BOOST":"4.68","PV_IN":"18.21","PWR":"6.78"}
+/1/analog? 2,3,6,7
+{"CHRG_A":"0.052","DISCHRG_A":"0.000","PV_V":"20.04","PWR_V":"13.61"}
+{"CHRG_A":"0.052","DISCHRG_A":"0.000","PV_V":"20.04","PWR_V":"13.60"}
+/1/analog? 0,1,4,5
+{"ADC0":"1.65","ADC1":"1.57","ADC4":"1.79","ADC5":"1.51"}
 ```
+
+The value reported is based on the referance value which is saved in EEPROM, see bellow.
+
+
+##  /0/avcc 4500000..5500000
+
+Calibrate the AVCC reference in microvolts. This is the reference used for all measurements.
+
+``` 
+/1/avcc 5009000
+{"REF":{"extern_avcc":"5.0090",}}
+``` 
+
+
+##  /0/onevone 900000..1300000
+
+Calibrate the 1V1 internal bandgap reference in microvolts. This is not used at this time.
+
+```
+/1/onevone 1100000
+{"REF":{"intern_1v1":"1.1000",}}
+``` 
+
+
+##  /0/reftoee
+
+Save the reference in static memory to EEPROM.
+
+```
+/1/reftoee
+{"REF":{"extern_avcc":"5.0090","intern_1v1":"1.1000",}}
+```
+
+
+##  /0/reffrmee
+
+Load the reference from EEPROM into static memory.
+
+```
+/1/reffrmee
+{"REF":{"extern_avcc":"5.0090","intern_1v1":"1.1000",}}
+```
+

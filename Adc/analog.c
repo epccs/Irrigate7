@@ -1,6 +1,6 @@
 /*
 analog is part of Adc, it returns Analog Conversions for channels which are provided in parse arguments, 
-Copyright (C) 2016 Ronald Sutherland
+Copyright (C) 2017 Ronald Sutherland
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -17,13 +17,16 @@ http://www.gnu.org/licenses/gpl-2.0.html
 */
 #include <avr/pgmspace.h>
 #include <util/atomic.h>
+#include <avr/eeprom.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include "../lib/parse.h"
 #include "../lib/adc.h"
 #include "../lib/timers.h"
+#include "../lib/pins_board.h"
 #include "analog.h"
+#include "references.h"
 
 #define SERIAL_PRINT_DELAY_MILSEC 60000
 static unsigned long serial_print_started_at;
@@ -45,6 +48,14 @@ void Analog(void)
                 return;
             }
         }
+        // laod reference calibration or show an error if they are not in eeprom
+        if ( ! LoadAnalogRefFromEEPROM() )
+        {
+            printf_P(PSTR("{\"err\":\"AdcRefNotInEeprom\"}\r\n"));
+            initCommandBuffer();
+            return;
+        }
+
         // print in steps otherwise the serial buffer will fill and block the program from running
         serial_print_started_at = millis();
         printf_P(PSTR("{"));
@@ -54,24 +65,31 @@ void Analog(void)
     else if ( (command_done == 11) )
     { // use the channel as an index in the JSON reply
         uint8_t arg_indx_channel =atoi(arg[adc_arg_index]);
-        if (arg_indx_channel < 5)
+        
+        //ADC0, ADC1, ADC4, ADC5
+        if ( (arg_indx_channel == ADC0) || (arg_indx_channel == ADC1) || (arg_indx_channel == ADC4) || (arg_indx_channel == ADC5) )
         {
             printf_P(PSTR("\"ADC%s\":"),arg[adc_arg_index]);
         }
-
-        if (arg_indx_channel == 5)
+        
+        if (arg_indx_channel == CHRG_I) //ADC2
         {
-            printf_P(PSTR("\"BOOST\":"));
+            printf_P(PSTR("\"CHRG_A\":"));
         }
 
-        if (arg_indx_channel == 6)
+        if (arg_indx_channel == DISCHRG_I) //ADC3
         {
-            printf_P(PSTR("\"PV_IN\":"));
+            printf_P(PSTR("\"DISCHRG_A\":"));
         }
 
-        if (arg_indx_channel == 7)
+        if (arg_indx_channel == PV_V) //ADC6
         {
-            printf_P(PSTR("\"PWR\":"));
+            printf_P(PSTR("\"PV_V\":"));
+        }
+        
+        if (arg_indx_channel == PWR_V) //ADC7
+        {
+            printf_P(PSTR("\"PWR_V\":"));
         }
         command_done = 12;
     }
@@ -80,28 +98,30 @@ void Analog(void)
         uint8_t arg_indx_channel =atoi(arg[adc_arg_index]);
 
         // There are values from 0 to 1023 for 1024 slots where each reperesents 1/1024 of the reference. Last slot has issues
-        // https://forum.arduino.cc/index.php?topic=303189.0        
-        if (arg_indx_channel < 5)
+        // https://forum.arduino.cc/index.php?topic=303189.0 
+        if ( (arg_indx_channel == ADC0) || (arg_indx_channel == ADC1) || (arg_indx_channel == ADC4) || (arg_indx_channel == ADC5) )
         {
-            printf_P(PSTR("\"%1.2f\""),(analogRead(arg_indx_channel)*5.0/1024.0));
-        }
-        
-        // Irrigate7 has a 100k and 5.62k  voltage divider on the solenoid boost converter. The BOOST goes through a 100k  to ADC5 and a 5.62k to ground.
-        if (arg_indx_channel == 5) 
-        {
-            printf_P(PSTR("\"%1.2f\""),(analogRead(arg_indx_channel)*(5.0/1024.0)*(105.62/5.62)));
-        }
-        
-        // Irrigate7 has a 432k and 100k voltage divider from the solar input. The PV goes through a 432k  to ADC6 and a 100k to ground.
-        if (arg_indx_channel == 6) 
-        {
-            printf_P(PSTR("\"%1.2f\""),(analogRead(arg_indx_channel)*(5.0/1024.0)*(532.0/100.0)));
+            printf_P(PSTR("\"%1.2f\""),(analogRead(arg_indx_channel)*(ref_extern_avcc_uV/1.0E6)/1024.0));
         }
 
-        // Irrigate7 has a 100 and 200k voltage divider from the battery(PWR). The PWR goes through a 100k  to ADC7 and a 200k to ground.
-        if (arg_indx_channel == 7) 
+        if (arg_indx_channel == CHRG_I) // RPUno has ADC2 connected to high side current sense to measure battery charging.
         {
-            printf_P(PSTR("\"%1.2f\""),(analogRead(arg_indx_channel)*(5.0/1024.0)*(3.0/2.0)));
+            printf_P(PSTR("\"%1.3f\""),(analogRead(CHRG_I)*((ref_extern_avcc_uV/1.0E6)/1024.0)/(0.068*50.0)));
+        }
+
+        if (arg_indx_channel == DISCHRG_I) // RPUno has ADC3 connected to high side current sense to measure battery discharg.
+        {
+            printf_P(PSTR("\"%1.3f\""),(analogRead(DISCHRG_I)*((ref_extern_avcc_uV/1.0E6)/1024.0)/(0.068*50.0)));
+        }
+
+        if (arg_indx_channel == PV_V) // RPUno has ADC6 connected to a voltage divider from the solar input.
+        {
+            printf_P(PSTR("\"%1.2f\""),(analogRead(PV_V)*((ref_extern_avcc_uV/1.0E6)/1024.0)*(532.0/100.0)));
+        }
+
+        if (arg_indx_channel == PWR_V) // RPUno has ADC7 connected a voltage divider from the battery (PWR).
+        {
+            printf_P(PSTR("\"%1.2f\""),(analogRead(PWR_V)*((ref_extern_avcc_uV/1.0E6)/1024.0)*(3.0/1.0)));
         }
 
         if ( (adc_arg_index+1) >= arg_count) 
@@ -131,4 +151,3 @@ void Analog(void)
         initCommandBuffer();
     }
 }
-

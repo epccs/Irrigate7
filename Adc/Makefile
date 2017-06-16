@@ -3,16 +3,20 @@ TARGET = Adc
 LIBDIR = ../lib
 OBJECTS = main.o \
 	analog.o \
+	calibrate.o \
+	references.o \
 	../Uart/id.o \
 	$(LIBDIR)/timers.o \
 	$(LIBDIR)/uart.o \
+	$(LIBDIR)/twi.o \
+	$(LIBDIR)/rpu_mgr.o \
 	$(LIBDIR)/adc.o \
 	$(LIBDIR)/parse.o
 
 ## Chip and project-specific global definitions
 MCU   =  atmega1284p
 F_CPU = 16000000UL  
-BAUD  =  115200UL
+BAUD  =  38400UL
 CPPFLAGS = -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) -I. 
 
 ## Cross-compilation
@@ -51,7 +55,7 @@ $(TARGET).hex: $(TARGET).elf
 ## stk500v1 is for Arduino as ISP (e.g. it is an example in the Arduino.cc IDE 1.6.7+)
 ## to reduce dupliction I only show the fuse setting in ../Bootloader
 
-## Program with an ISP. locking the bootloader section, is a good idea even if it is not used
+## lock the bootloader section, which is a good idea even if it is not used
 isp: $(TARGET).hex
 	avrdude -v -p $(MCU) -c stk500v1 -P $(ISP_PORT) -b 19200 -e -U flash:w:$(TARGET).hex -U lock:w:0x2f:m
 

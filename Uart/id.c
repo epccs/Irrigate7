@@ -1,5 +1,5 @@
 /*
-id is part of Adc, it uses a command line and optinal arguemnt to provide device info, 
+id is part of RPUno, it adds the identify command to an RPU_BUS command line interface, 
 Copyright (C) 2016 Ronald Sutherland
 
 This program is free software; you can redistribute it and/or
@@ -19,6 +19,7 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include <stdio.h>
 #include <stdlib.h> 
 #include "../lib/parse.h"
+#include "../lib/rpu_mgr.h"
 #include "id.h"
 
 void Id(char name[])

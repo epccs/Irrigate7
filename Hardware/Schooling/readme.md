@@ -4,6 +4,8 @@ Some lessons I learned doing Irrigate7.
 
 # Table Of Contents:
 
+9. ^2 Digital IO Protection Resistor
+8. ^2 Pull Up IO9
 7. ^1 RPUno
 6. ^1 CL8
 5. ^1 K3
@@ -11,6 +13,22 @@ Some lessons I learned doing Irrigate7.
 3. ^0 C1 Bypass Moved to LT3652 VIN
 2. ^0 LMV358 Does Not have 5V Befor Battery Connect
 1. ^0 C11 Interference with HW1 (DIN mount)
+
+
+## ^2 Digital IO Protection Resistor
+
+The level shifting NMOS will provide the protection resistor between 4.5V and 3.5V and at 40mA the MCU pin voltage is over 0.5V, this all adds up to using a lower value protection resistor. If it is 100 Ohms then at one of the NMOS extremes it will have 4.5V on one side and .5V on the other and thus a 4V drop, which means 40mA.
+
+The reason I am looking at this is that both DIO13 and DIO12 are unable to sink all of a 22mA current source with the 182 Ohm resistor that is presently used as a protection resistor. Measurements indicate the NMOS side has about 3.7V and the MCU pin has 0.35V, which means the most it could ever sink is about 19mA (with 100 Ohm protection it should be able to sink about 32mA).
+
+The life expectancy of the MCU pin is somewhat dependent on how much current it sinks, at 20mA it should last forever (e.g. >20 years), however at 40mA the life expectancy is short (perhaps a few weeks). 
+
+
+## ^2 Pull Up IO9
+
+Found Current sources only able to give a a few mA durring testing since IO9 is floating, add a pullup so it workes in a defined way after power up.
+
+![Irrigate7^2 IO9 Pull Up](./14320^2,PullUpIO9.png "Irrigate7^2 IO9 Pull Up")
 
 
 ## ^1 RPUno

@@ -1,18 +1,18 @@
 # Makefile 
-TARGET = CCtest
+TARGET = SelfTest
 LIBDIR = ../lib
 OBJECTS = main.o \
-	cctest.o \
-	../Uart/id.o \
-	$(LIBDIR)/timers.o \
+	../Adc/references.o \
 	$(LIBDIR)/uart.o \
+	$(LIBDIR)/twi.o \
+	$(LIBDIR)/rpu_mgr.o \
 	$(LIBDIR)/adc.o \
-	$(LIBDIR)/parse.o
+	$(LIBDIR)/timers.o
 
 ## Chip and project-specific global definitions
 MCU   =  atmega1284p
 F_CPU = 16000000UL  
-BAUD  =  115200UL
+BAUD  =  38400UL
 CPPFLAGS = -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) -I. 
 
 ## Cross-compilation
@@ -47,15 +47,9 @@ $(TARGET).hex: $(TARGET).elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
 	rm -f $(TARGET).elf
 
-## http://eleccelerator.com/fusecalc/fusecalc.php?chip=atmega328p&LOW=FF&HIGH=DE&EXTENDED=05&LOCKBIT=2F
-## stk500v1 is for Arduino as ISP (e.g. it is an example in the Arduino.cc IDE 1.6.7+)
-## to reduce dupliction I only show the fuse setting in ../Bootloader
-
-## Program with an ISP. locking the bootloader section, is a good idea even if it is not used
-isp: $(TARGET).hex
-	avrdude -v -p $(MCU) -c stk500v1 -P $(ISP_PORT) -b 19200 -e -U flash:w:$(TARGET).hex -U lock:w:0x2f:m
-
-## avr109: xboot wants to see the erase command -e and needs safemode fuse checking disabled -u
+## avr109: The xboot bootloader talks to avrdude with -c avr109  
+## xboot needs to see the erase command -e or it will not erase the part, 
+## xboot needs safemode fuse checking command disabled -u since xboot does not read the fuse.
 bootload: $(TARGET).hex
 	avrdude -v -p $(MCU) -c avr109 -P $(BOOT_PORT) -b 115200 -e -u -U flash:w:$(TARGET).hex
 

@@ -179,16 +179,16 @@ Once the UUT connects power (battery charged to > 13.1V) check that the VIN pin 
 Measure the +5V supply at J7 pin 6 and pin 5.
 
 ```
-{ "+5V":[5.00,4.99,4.95,4.96,5.00,4.99,4.97,5.00,] }
+{ "+5V":[4.9959,] }
 ```
 
-Edit the SelfTest main.c such that "#define ADC_REF 5.0" has the correct value for the UUT. Next, run the bootload rule in the Makefile to upload the self-test firmware to the UUT that the remote shield is mounted on.
+Edit the SelfTest main.c such that "#define REF_EXTERN_AVCC 4995900UL" has the correct value for the UUT. Next, run the bootload rule in the Makefile to upload the self-test firmware to the UUT that the remote shield is mounted on.
 
 ```
-cd ~RPUno/SelfTest
+cd ~Irrigate7/SelfTest
 gedit main.c
 make bootload
-# toss the change
+# toss the change (if you want)
 git checkout -- main.c
 ```
 
@@ -196,35 +196,60 @@ Use picocom to see the SelfTest results over its UART interface.
 
 
 ```
-picocom -b 38400 /dev/ttyUSB0
+rsutherland@conversion:~/Irrigate7/SelfTest$ picocom -b 38400 /dev/ttyUSB0
 picocom v1.7
-...
+
+port is        : /dev/ttyUSB0
+flowcontrol    : none
+baudrate is    : 38400
+parity is      : none
+databits are   : 8
+escape is      : C-a
+local echo is  : no
+noinit is      : no
+noreset is     : no
+nolock is      : no
+send_cmd is    : sz -vv
+receive_cmd is : rz -vv
+imap is        : 
+omap is        : 
+emap is        : crcrlf,delbs,
+
 Terminal ready
-Self Test date: Feb 18 2017
+Irrigate7 DIO and ADC Self Test date: Jun 20 2017
 I2C provided address 0x31 from RPU bus manager
-+5V needs measured and then set as ADC_REF: 4.950 V
-Charging with CURR_SOUR_EN==off: 0.108 A
-PWR (Battery) at: 13.385 V
-MPPT at: 16.999 V
++5V needs measured and then set as REF_EXTERN_AVCC: 4.996 V
+Charging with CURR_SOUR_EN==low: 0.036 A
+PWR (Battery) at: 13.509 V
+MPPT at: 17.079 V
 ADC0 at: 0.000 V
 ADC1 at: 0.000 V
-ICP1 /w 0mA on plug termination reads: 1
-CC_nFAULT measured with a weak pull-up: 1
-Charging delta with CURR_SOUR_EN==on: 0.087 A
-ADC0 with its own 20mA source on R1: 0.022 A
-ADC1 with ICP1's 10mA on ICP1_TERM: 0.010 A
-ICP1 /w 10mA on plug termination reads: 0
-Dischrging at: 0.101 A
-PV open circuit (LT3652 off) at: 21.242 V
-ADC0 and digital curr source on R1: 0.044 A
-ADC0 measure curr on R1 with DIO12 shunting: 0.028 A
-ADC0 measure curr on R1 with DIO13 shunting: 0.028 A
-ADC0 and ADC1 curr source on R1: 0.044 A
-ADC0 measure curr on R1 with DIO10 shunting: 0.028 A
-ADC0 measure curr on R1 with DIO11 shunting: 0.028 A
-ICP1 10mA + 16mA curr source on ICP1_TERM: 0.028 A
-ICP1 curr on ICP1_TERM with DIO4 shunting: 0.013 A
-ICP1 curr on ICP1_TERM with DIO3 shunting: 0.013 A
+ADC4 at: 0.000 V
+ADC5 at: 0.000 V
+ICP1 /w 0mA on plug termination reads: 1 
+ICP3 /w 0mA on plug termination reads: 1 
+CC_nFAULT measured with a weak pull-up: 1 
+22MA@DIO10 curr source on R1: 0.021 A
+22MA@DIO2 curr source on R2: 0.021 A
+Dischrg with CURR_SOUR_EN==high: 0.047 A
+Chrg delta with CURR_SOUR_EN==high: 0.083 A
+22MA@ADC0 on R1: 0.021 A
+22MA@ADC5 on R2: 0.021 A
+10MA@ICP1 with ICP1 PL input: 0.010 A
+ICP1 /w 10mA on plug termination reads: 0 
+10MA@ICP3 with ICP3 PL input: 0.010 A
+ICP3 /w 10mA on plug termination reads: 0 
+Dischrging with CC_SHUTDOWN==high : 0.139 A
+PV open circuit (LT3652 off) at: 20.972 V
+22mA@ADC0 and 22mA@ADC1 on R1: 0.043 A
+22MA@DIO10, 22mA@ADC0, 22mA@ADC1 on R1: 0.064 A
+22mA@ADC4 and 22mA@ADC5 on R2: 0.043 A
+22MA@DIO2, 22mA@ADC4, 22mA@ADC5 on R2: 0.064 A
+ICP1 10mA + 17mA curr source on ICP1_TERM: 0.028 A
+ICP1 10mA with DIO4 sinking 17mA: 0.010 A
+ICP1 10mA with DIO3 sinking 17mA: 0.010 A
+ICP3 10mA + 17mA curr source on ICP3_TERM: 0.028 A
+ICP1 10mA with DIO4 sinking 17mA: 0.010 A
 To disconnect battery turn off the PV supply and LED should stop blinking
 [PASS]
 ```

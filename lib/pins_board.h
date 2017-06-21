@@ -91,6 +91,9 @@
 #define SDA 20
 #define SCL 21
 
+// VIN  pin shield power control
+#define SHLD_VIN_EN 22
+
 //K3/K7/CL8 Interface
 #define CL8_E3 23
 #define K3_NE1 23

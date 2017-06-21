@@ -1,10 +1,8 @@
 # Makefile 
-TARGET = Adc
+TARGET = DayNight
 LIBDIR = ../lib
 OBJECTS = main.o \
-	analog.o \
-	calibrate.o \
-	references.o \
+	day_night.o \
 	../Uart/id.o \
 	$(LIBDIR)/timers.o \
 	$(LIBDIR)/uart.o \

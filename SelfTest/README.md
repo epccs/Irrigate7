@@ -10,7 +10,7 @@ Note: I am concerned the level shift could somewhat turn on with the 4V drop on 
 
 The red and green LED are used to indicate test status.
 
-## Wiring Needed for RPUno
+## Wiring Needed for SelfTest
 
 ![Wiring](./Setup/SelfTestWiring.png)
 
@@ -28,10 +28,10 @@ Note: I adjust CC to speed up charging until VIN connects and then return it to 
 
 ## Firmware Upload
 
-With a serial port connection (set the BOOT_PORT in Makefile) and optiboot installed on the RPUno run 'make bootload' and it should compile and then flash the MCU.
+With a serial port connection (set the BOOT_PORT in Makefile) and xboot installed on the Irrigate7 run 'make bootload' and it should compile and then flash the MCU.
 
 ``` 
-rsutherland@conversion:~/Samba/RPUno/SelfTest$ make bootload
+rsutherland@conversion:~/Samba/Irrigate7/SelfTest$ make bootload
 ...
 avrdude done.  Thank you.
 rsutherland@conversion:~/Samba/Irrigate7/SelfTest$ make clean

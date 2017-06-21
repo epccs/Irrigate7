@@ -145,6 +145,10 @@ Disconnect the ICSP tool and measure the input current, wait for the power to be
 
 ## Self Test
 
+Items.
+
+![Irrigate7 SelfTest Items](./14320,SelfTest.jpg "Irrigate7 SelfTest Items")
+
 Plug an [RPUftdi] shield with [Host2Remote] firmware onto an [RPUno] board and load [I2C-Debug] on it.
 
 [RPUftdi]: https://github.com/epccs/RPUftdi

@@ -7,6 +7,7 @@ This shows the setup and method used for evaluation of Irrigate7.
 
 # Table Of Contents:
 
+7. ^2 Crystal Check
 6. ^2 RS422 Shield
 5. ^2 Lifting DIN Mount
 4. ^1 Sensor Loop Select
@@ -14,6 +15,15 @@ This shows the setup and method used for evaluation of Irrigate7.
 2. ^1 With RPUftdi^2
 1. ^0A LT3652 Timer
 
+
+## ^2 Crystal Check
+
+The crystal has 27pF crystal capacitors which combine with the board's parasitic capacitance to make the crystals load capacitance.
+
+![Irrigate7^2 Crystal Check](./Irrigat7^2,CrystalCheck.jpg "Irrigate7^2 Crystal Check")
+![Irrigate7^2 Crystal Check On DSO](./Irrigat7^2,CrystalCheckOnDSO.jpg "Irrigate7^2 Crystal Check On DSO")
+
+Previous versions had a different crystal that needed less capacitance (which unfortunately got copied onto other boards).
 
 ## ^2 RS422 Shield
 

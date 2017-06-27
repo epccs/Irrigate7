@@ -4,14 +4,18 @@ From <https://github.com/epccs/Irrigate7/>
 
 ## Overview
 
-This Solar Powerd Programmable Controller board has pluggable connections for seven Latching Solenoid Drivers, seven digital I/O, two Input Capture, and four Analog inputs with current loop sources from the 12V SLA battery. Use a string of 36 silicon solar cells 3W through 20W (e.g. SLP003-12U through SLP020-12U) of power for the charge controller. 
+This Solar Powerd Programmable Controller board is based on an ATmega1284p and is programable with the open source GCC toolchain for AVR. It has pluggable connections for seven Latching Solenoid Drivers, seven digital I/O, two Input Capture, and four Analog inputs with current loop sources from the 12V SLA battery. Harvest power from a string of 36 silicon solar cells (e.g. SLP003-12U through SLP020-12U) using the on board LT3652 charge controller to manage battery charging. The ATmega1284p can turn the LT3652 off, detect a fault,  also it can measure: battery current, battery voltage, and the photovoltaic string voltage.
 
-It is similar to the [RPUno] design but has some additional pluggable interfaces (e.g. IO2, ICP3, ADC4, ADC5). It's MCU is the ATmega1284p and has Arduino-style headers that work with the [RPUpi], [RPUftdi], or [RPUadpt] shields. The embedded LT3652 solar charge controller manages battery charging and the ATmega1284p interfaces with it (see Hardware for more details).
+It is similar to the [RPUno] design but has some additional pluggable interfaces (e.g. K1..K7, IO2, ICP3, ADC4, ADC5). It's MCU is connected to Arduino-style headers that work with the [RPUpi], [RPUftdi], or [RPUadpt] shields.
 
 [RPUno]: https://github.com/epccs/RPUno
 [RPUpi]: https://github.com/epccs/RPUpi
 [RPUftdi]: https://github.com/epccs/RPUftdi
 [RPUadpt]: https://github.com/epccs/RPUadpt
+
+[Forum](http://rpubus.org/bb/viewforum.php?f=17)
+
+[HackaDay](https://hackaday.io/project/25599-irrigate7-a-solar-powered-atmega1284p-board)
 
 ## Status
 

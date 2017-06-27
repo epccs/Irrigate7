@@ -137,7 +137,7 @@ return ICP1 event timer values as a 16 bit unsigned integer, which continuously 
 
 ## /0/pwm oc2a,0..255
 
-Pulse width modulation using OC2A can be used to feed the ICP1 input, use a 1k Ohm resistor between them to be safe. Note that timer2 is used with OC2A, while timer1 is needed for ICP1. 
+Pulse width modulation using OC2A (on PD7, which is mapped to Digital pin 11) can be used to pull down the 10mA current source that is enabled with a jumper on the ICP1 PL input. Note that timer2 is used when OC2A is set, and timer1 is used with ICP1 capture, also timer0 is used with the millis() function that is used to provide various timing. 
 
 ``` 
 /1/pwm oc2a,127

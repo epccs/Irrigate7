@@ -17,6 +17,7 @@ This is a list of Test preformed on each Irrigate7 after assembly.
 8. [LT3652 Power Up Without Battery](#lt3652-power-up-without-battery)
 9. [LT3652 Load Test](#lt3652-load-test)
 10. [Bias +5V](#bias-5v)
+11. [K7 Bias 5V](#k7-bias-5v)
 12. [20mA Source](#current-sources)
 13. [Set MCU Fuse and Install Bootloader](#set-mcu-fuse-and-install-bootloader)
 14. [Self Test](#self-test)
@@ -100,6 +101,17 @@ Apply a 30mA current limited 5V source to +5V (J10 pin 4 and pin 3). Check that 
 ```
 
 Note if the fuse need set back to the factory (OEM) values there is a make rule, but VIN needs to be jumperd to +5V for the ICSP tool to work (the ESD_NODE needs bias for SCK on the tool to work).
+
+
+## K7 Boost Bias 5V
+
+Setup a current limited supply with 5V and about 30mA limit. Connect the supply to BOOST_IN (J10 pin 2) and 0V (J10 pin 3) to the supply. Measure the input current bias while disabled.
+
+C106 (2200uF) is not on board, it is mounted in the plugable connector between BOOST (J10 pin 1) and 0V (J10 pin 3).
+
+``` 
+{"BOOST_DISABLED_mA":[0.2,,] }
+``` 
 
 
 ## Set MCU Fuse and Install Bootloader
@@ -220,42 +232,79 @@ omap is        :
 emap is        : crcrlf,delbs,
 
 Terminal ready
-Irrigate7 DIO and ADC Self Test date: Jun 20 2017
+Irrigate7 DIO and ADC Self Test date: Jun 25 2017
 I2C provided address 0x31 from RPU bus manager
 +5V needs measured and then set as REF_EXTERN_AVCC: 4.996 V
-Charging with CURR_SOUR_EN==low: 0.036 A
-PWR (Battery) at: 13.509 V
-MPPT at: 17.079 V
+Charging with CURR_SOUR_EN==low: 0.040 A
+PWR (Battery) at: 13.275 V
+MPPT at: 16.897 V
 ADC0 at: 0.000 V
 ADC1 at: 0.000 V
 ADC4 at: 0.000 V
 ADC5 at: 0.000 V
-ICP1 /w 0mA on plug termination reads: 1 
-ICP3 /w 0mA on plug termination reads: 1 
-CC_nFAULT measured with a weak pull-up: 1 
+ICP1 /w 0mA on plug termination reads: 1
+ICP3 /w 0mA on plug termination reads: 1
+CC_nFAULT measured with a weak pull-up: 1
 22MA@DIO10 curr source on R1: 0.021 A
 22MA@DIO2 curr source on R2: 0.021 A
-Dischrg with CURR_SOUR_EN==high: 0.047 A
-Chrg delta with CURR_SOUR_EN==high: 0.083 A
-22MA@ADC0 on R1: 0.021 A
-22MA@ADC5 on R2: 0.021 A
+Dischrg with CURR_SOUR_EN==high: 0.046 A
+Chrg delta with CURR_SOUR_EN==high: 0.086 A
+22MA@ADC0 on R1: 0.022 A
+22MA@ADC5 on R2: 0.022 A
 10MA@ICP1 with ICP1 PL input: 0.010 A
-ICP1 /w 10mA on plug termination reads: 0 
+ICP1 /w 10mA on plug termination reads: 0
 10MA@ICP3 with ICP3 PL input: 0.010 A
-ICP3 /w 10mA on plug termination reads: 0 
-Dischrging with CC_SHUTDOWN==high : 0.139 A
+ICP3 /w 10mA on plug termination reads: 0
+Dischrging with CC_SHUTDOWN==high : 0.141 A
 PV open circuit (LT3652 off) at: 20.972 V
-22mA@ADC0 and 22mA@ADC1 on R1: 0.043 A
-22MA@DIO10, 22mA@ADC0, 22mA@ADC1 on R1: 0.064 A
+22mA@ADC0 and 22mA@ADC1 on R1: 0.044 A
+22MA@DIO10, 22mA@ADC0, 22mA@ADC1 on R1: 0.065 A
 22mA@ADC4 and 22mA@ADC5 on R2: 0.043 A
-22MA@DIO2, 22mA@ADC4, 22mA@ADC5 on R2: 0.064 A
+22MA@DIO2, 22mA@ADC4, 22mA@ADC5 on R2: 0.065 A
 ICP1 10mA + 17mA curr source on ICP1_TERM: 0.028 A
 ICP1 10mA with DIO4 sinking 17mA: 0.010 A
 ICP1 10mA with DIO3 sinking 17mA: 0.010 A
 ICP3 10mA + 17mA curr source on ICP3_TERM: 0.028 A
 ICP1 10mA with DIO4 sinking 17mA: 0.010 A
+Dischrg /w CC_SHUTDOWN, !K3_E3, !CURR_SOUR_EN: 0.046 A
+Dischrg@100mSec /w CC_SHUTDOWN, K3_E3, !CURR_SOUR_EN: 0.050 A
+Dischrg@300mSec /w CC_SHUTDOWN==high, K3_E3==hight: 0.118 A
+Dischrg@500mSec /w CC_SHUTDOWN==high, K3_E3==hight: 0.123 A
+Dischrg@2000mSec /w CC_SHUTDOWN==high, K3_E3==hight: 0.069 A
+BOOST@2000mSec: 24.110 V
 To disconnect battery turn off the PV supply and LED should stop blinking
 [PASS]
 ```
 
 Before truning off the PV power check that the VIN pin on the shield has no power, the test turns it off. Then turn off the power supply and verify battery was disconnected.
+
+Run the SelfTest for each of the three voltage settings and measure the value with a DMM.
+
+```
+{ "9VBOOSTLD_V":[9.2,],
+"12VBOOST_V":[12.2,],
+"24VBOOST_V":[24.1,]}
+```
+
+## Solenoid Test
+
+Items.
+
+![Irrigate7 Solenoid Test Items](./14320,SolenoidTest.jpg "Irrigate7 Solenoid Test Items")
+
+Connect the [Solenoid Test Harness] to the UUT. Connect 100 kOhm resistor to both the PV side and BAT side thermistor inputs to simulate room temperature. Connect a 12V SLA battery to the +BAT and -BAT. Connect +PV and -PV to a CC/CV mode supply with CC set at 150mA and  CV set at 0V. Apply power and increase the CV setting to 21V.
+
+[Solenoid Test Harness]: https://raw.githubusercontent.com/epccs/RPUno/master/SelfTest/Setup/SelfTestWiring.png
+
+
+```
+cd ~Irrigate7/Solenoid
+make bootload
+```
+
+Use picocom to see the Solenoid initialization on the [Solenoid Test Harness] LED's
+
+```
+rsutherland@conversion:~/Irrigate7/Solenoid$ picocom -b 38400 /dev/ttyUSB0
+picocom v1.7
+```

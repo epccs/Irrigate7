@@ -53,9 +53,9 @@ void Pwm(void)
                 }
 #elif defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) \
     || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
-                if ( !(DDRD & (1<<PD7)) ) // if bit PB3 is clear then the pin is an INPUT
+                if ( !(DDRD & (1<<PD7)) ) // if bit PD7 is clear then the pin is an INPUT
                 {
-                    DDRD |= (1<<PD7);
+                    DDRD |= (1<<PD7); // set PD7 as an OUTPUT
                 }
 
                 // connect PD7 pin to OC2A output (pwm) from timer 2, channel A set in Clear OC2A on Compare Match mode.

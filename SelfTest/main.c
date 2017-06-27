@@ -39,6 +39,7 @@ along with the Arduino DigitalIO Library.  If not, see
 
 #define R1 47.0
 #define R2 47.0
+#define R3 3650.0
 #define ICP1_TERM 100.0
 #define ICP3_TERM 100.0
 
@@ -84,6 +85,20 @@ void setup(void)
     digitalWrite(DIO12,LOW);
     pinMode(DIO13,OUTPUT);
     digitalWrite(DIO13,LOW);
+    
+    //K3/K7/CL8 Interface, 74HC238 are disabled
+    pinMode(A0,OUTPUT);
+    digitalWrite(A0,LOW);
+    pinMode(A1,OUTPUT);
+    digitalWrite(A1,LOW);
+    pinMode(A2,OUTPUT);
+    digitalWrite(A2,LOW);
+    pinMode(K3_E3,OUTPUT);
+    digitalWrite(K3_E3,LOW);
+    pinMode(K7_E3,OUTPUT);
+    digitalWrite(K7_E3,LOW);
+    pinMode(CL8_E3,OUTPUT);
+    digitalWrite(CL8_E3,LOW);
 
     // Initialize Timers, ADC, and clear bootloader, Arduino does these with init() in wiring.c
     initTimers(); //Timer0 Fast PWM mode, Timer1 & Timer2 Phase Correct PWM mode.
@@ -500,6 +515,38 @@ void test(void)
         printf_P(PSTR(">>> DIO2 is not sinking.\r\n"));
     }
     
+    // Turn on the K7 boost suppy and measure it with R1 (make sure no other current source is on)
+    digitalWrite(CURR_SOUR_EN,LOW);
+    _delay_ms(2000) ; // busy-wait delay, DISCHRG_I is averaged by a 1uF and 100k filter.  
+    float dischrg_ccoff_booston_i = analogRead(DISCHRG_I)*((ref_extern_avcc_uV/1.0E6)/1024.0)/(0.068*50.0);
+    printf_P(PSTR("Dischrg /w CC_SHUTDOWN, !K3_E3, !CURR_SOUR_EN: %1.3f A\r\n"), dischrg_ccoff_booston_i);
+    pinMode(DIO10,OUTPUT);
+    digitalWrite(DIO10,LOW);
+    pinMode(DIO13,OUTPUT);
+    digitalWrite(DIO13,LOW);
+    digitalWrite(A0,HIGH);
+    digitalWrite(K3_E3,HIGH); // turn on the 74HC238 with Y1 output selected, K3_E3 also turns on the 17mA test current thru D103
+    _delay_ms(100) ; // busy-wait delay
+    dischrg_ccoff_booston_i = analogRead(DISCHRG_I)*((ref_extern_avcc_uV/1.0E6)/1024.0)/(0.068*50.0);
+    printf_P(PSTR("Dischrg@100mSec /w CC_SHUTDOWN, K3_E3, !CURR_SOUR_EN: %1.3f A\r\n"), dischrg_ccoff_booston_i);
+    _delay_ms(200) ; // busy-wait delay
+    dischrg_ccoff_booston_i = analogRead(DISCHRG_I)*((ref_extern_avcc_uV/1.0E6)/1024.0)/(0.068*50.0);
+    printf_P(PSTR("Dischrg@300mSec /w CC_SHUTDOWN==high, K3_E3==hight: %1.3f A\r\n"), dischrg_ccoff_booston_i);
+    _delay_ms(200) ; // busy-wait delay
+    dischrg_ccoff_booston_i = analogRead(DISCHRG_I)*((ref_extern_avcc_uV/1.0E6)/1024.0)/(0.068*50.0);
+    printf_P(PSTR("Dischrg@500mSec /w CC_SHUTDOWN==high, K3_E3==hight: %1.3f A\r\n"), dischrg_ccoff_booston_i);
+    _delay_ms(1500) ; // busy-wait delay
+    dischrg_ccoff_booston_i = analogRead(DISCHRG_I)*((ref_extern_avcc_uV/1.0E6)/1024.0)/(0.068*50.0);
+    printf_P(PSTR("Dischrg@2000mSec /w CC_SHUTDOWN==high, K3_E3==hight: %1.3f A\r\n"), dischrg_ccoff_booston_i);
+    float boost_v = 0.7 + analogRead(ADC0)*((ref_extern_avcc_uV/1.0E6)/1024.0) * ( (R1+R3) / R1);
+    printf_P(PSTR("BOOST@2000mSec: %1.3f V\r\n"), boost_v);
+    if (boost_v < 8.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> BOOST has failed.\r\n"));
+    }
+    digitalWrite(K3_E3,LOW); //turn off the 17mA test current
+
     // Disconnect message
     printf_P(PSTR("To disconnect battery turn off the PV supply and LED should stop blinking\r\n"));
 

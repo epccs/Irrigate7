@@ -55,26 +55,26 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
 ![Status](./status_icon.png "Irrigate7 Status")
 
 ```
-        ^2  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, 
-            WIP: Testing,
-            Todo: Evaluation.
+        ^3  Done: 
+            WIP: Design,
+            Todo:  Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
-            Update DIN MNT, round sharp edges with a radius, swap connector numbers J4->J6-J7->J4, add TP4
-            Digital IO current limit resistor should go between K38 and MCU.
-            Digital IO ESD clamp to a 0.1uF cap charged with diode blocked + 10k Ohm from VIN. 
-            ICP1 and ICP3 pulse sensor input like RPUno^6.
-            High side battery current sensing like RPUno^6.
-            Add 2x5 IDE plug interface for testing K7 and interfacing with CL8.
-            Remove CL8 function (it will be an option with the CL8 board) and make ICP3 like ICP1 input.
-            Remove JTAG connector, use the IO for K7 and CL8 interface not PVCC.
-            Allow placing boost storage Cap on a pluggable connector.
-            Backport K3 board updates to the K7 control on this board and setup to work with CL8 board.
+            Move J9 (conn for K7) out some so the shield can clear it.
+            Move L2, R17, R18 to bottom. 
+            fix lables for R15, R42, C3.
+            LED for boost test current should probably be through hole
+            Space Q159 from Q158 to reduce solder bridges.
+            Space Q164 from Q165 to reduce solder bridges.
+            Space Q156 from Q157 to reduce solder bridges.
+            Pull up IO9 so it is not floating at power up.
 
-        ^1  Done: Design, Layout, BOM, Review*, Order Boards, Assembly,
-            WIP: Testing,
-            Todo:  Evaluation.
-            *during review the Design may change without changing the revision.
+        ^2  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing,
+            WIP: Evaluation.
+            location: 2017-6-26 Test Bench.
+
+        ^1  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
             location: 2016-5-13 Test Bench.
+                      2017-6-12 scraped
 ```
 
 Debugging and fixing problems i.e. [Schooling](./Schooling/)

@@ -55,13 +55,14 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
 ![Status](./status_icon.png "Irrigate7 Status")
 
 ```
-        ^3  Done: 
-            WIP: Design,
-            Todo:  Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
+        ^3  Done: Design, Layout, BOM, 
+            WIP: Review*, 
+            Todo: Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             Move J9 (conn for K7) out some so the shield can clear it.
-            Move L2, R17, R18 to bottom. 
-            fix lables for R15, R42, C3.
+            Move L2 to bottom. 
+            Remove R17 and R18. 
+            visable lables for R15, R42, C3.
             LED for boost test current should probably be through hole
             Space Q159 from Q158 to reduce solder bridges.
             Space Q164 from Q165 to reduce solder bridges.
@@ -151,13 +152,21 @@ The LT3652 has a control loop for regulating the input voltage, which can be com
 
 Another control loop in the LT3652 is for regulating the SLA voltage, which needs to be compensated so that the charging voltage tracks with temperature to prevent battery damage.
 
-Both are compensated with a 100k Thermistor which is placed on a short wire mounted in heat shrink with some thermoplastic and connected to the pluggable screw terminals. When in use the installer will need to place a sensor under the PV panel and the other sensor near the battery. Use a sunlight resistant cable between the PV panel and the enclosure, and for the battery temperature sensor use wiring appropriate for the enclosure. These sensors should be wired with twisted pair to minimize injecting noise into the charge controller.   
+Both are compensated with a 100k Thermistor which is placed on a short wire mounted in heat shrink with some thermoplastic and connected to the pluggable screw terminals. When in use the installer will need to place one of the thermistor under the PV panel and the other thermistor near the battery. Use a sunlight resistant cable between the PV panel and the enclosure, and for the battery temperature sensor use wiring appropriate for the enclosure. These sensors should be wired with twisted pair to minimize injecting noise into the charge controller.   
 
 ![100kThermistor](./Documents/100kThermistor.jpg)
 
 
 # How To Use
 
-TBD
+Fully charge the SLA battery that will be used, this step will allow the microcontroller to receive power quickly rather than waiting for the charge controller to charge it to about 13.1V.
 
-Warning: firmware examples for this board are for a previous version (^1) and may not work with this version.
+Connect the application electronics (e.g. flow meter, analog current loops, and whatever the application uses) and check the connections. Then connect the battery (which will remain electronically disconnected). Next, connect the solar photovoltaic power, once the PV voltage is enough to enable the charger it will electronically connect to the battery, and start charging (though nothing is visible yet, and this has caused some frustration). When the battery voltage is over 13.1V it will connect to the on board VIN node and power the microcontroller. The buffered power ensures hiccup free operation. 
+
+In some ways, this board is like an [RPUno], with the same interface dedicated to the onboard hardware.  Digital lines IO5, IO6, IO7 are connected to the solar charge controller. Digital line IO9 is used to control current sources.  Four analog lines ADC7, ADC6, ADC3, ADC2 are used to measure the battery PWR voltage, PV_IN voltage, CHRG, and DISCHRG. However, this board has a ATmega1284p so IO2 is available and IO22 is used to control power to the SHLD_VIN. Four analog lines ADC0, ADC1, ADC4, ADC5 are available to the user. The I2C lines do not use ADC4 and ADC5 like on the ATmega328p.
+
+Latching solenoids are widely available but they don't often say how to power them. I think it is because the idea of sending a current pulse to the coil is fairly complicated. Most of the coils will go up in smoke if the current flow is for very long. The pulse time is determined by the coil resistance and the size of capacitor discharged. Unfortunately, most manufacturers don't rate their products. So I sort of need to open one up and see what they are doing. For example, the battery-operated controller for my valves has a 2200uF capacitor that is charged to about 20V. To test the coil I charge a capacitor of that size to 12V and see if it can latch it, and then 24V. The risk of damage to the coil increases with capacitor size and voltage, so stay with 2200uF or a little less. It is probably worth trying to figure how reliable it latches at 12V (I end up using 24V). The board has a jumper to select 9V, 12V, or 24V.
+
+If the solenoid driver bridge is shorted when the capacitor is discharged it will smoke both selected half bridge and the common half bridge. The bridge drives have a 17mA current source used to test for a shorted bridge before powering the boost converter. The 17mA test current is sent through a LED which should sort of flutter during normal operation, but if it stays on when IO15 is HIGH, then a half bridge has been damaged and the boost supply will not start. It is easy enough to find the short with a DMM, and reworking is possible if you are comfortable with large SMD components (see the bill of materials for the exact parts I used). 
+
+TBD

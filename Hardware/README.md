@@ -55,9 +55,9 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
 ![Status](./status_icon.png "Irrigate7 Status")
 
 ```
-        ^3  Done: Design, Layout, BOM, 
-            WIP: Review*, 
-            Todo: Order Boards, Assembly, Testing, Evaluation.
+        ^3  Done: Design, Layout, BOM, Review*, 
+            WIP: Order Boards,
+            Todo: Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             Move J9 (conn for K7) out some so the shield can clear it.
             Move L2 to bottom. 

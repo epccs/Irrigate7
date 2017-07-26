@@ -55,19 +55,19 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
 ![Status](./status_icon.png "Irrigate7 Status")
 
 ```
-        ^3  Done: Design, Layout, BOM, Review*, 
-            WIP: Order Boards,
-            Todo: Assembly, Testing, Evaluation.
+        ^4  Done: 
+            WIP: Design, 
+            Todo: Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
-            Move J9 (conn for K7) out some so the shield can clear it.
-            Move L2 to bottom. 
-            Remove R17 and R18. 
-            visable lables for R15, R42, C3.
-            LED for boost test current should probably be through hole
-            Space Q159 from Q158 to reduce solder bridges.
-            Space Q164 from Q165 to reduce solder bridges.
-            Space Q156 from Q157 to reduce solder bridges.
+            Via was placed on wires for nSHDN and battery polarity protection
+            Test Points
+
+        ^3  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing, 
+            WIP: Evaluation.
+            Todo: 
+            *during review the Design may change without changing the revision.
             Pull up IO9 so it is not floating at power up.
+            location: 2017-7-26 Storage (it may be used for Evaluation).
 
         ^2  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing,
             WIP: Evaluation.

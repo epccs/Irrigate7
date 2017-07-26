@@ -4,6 +4,7 @@ Some lessons I learned doing Irrigate7.
 
 # Table Of Contents:
 
+10. ^3 Via on Wires
 9. ^2 Digital IO Protection Resistor
 8. ^2 Pull Up IO9
 7. ^1 RPUno
@@ -13,6 +14,13 @@ Some lessons I learned doing Irrigate7.
 3. ^0 C1 Bypass Moved to LT3652 VIN
 2. ^0 LMV358 Does Not have 5V Befor Battery Connect
 1. ^0 C11 Interference with HW1 (DIN mount)
+
+
+## ^3 Via on Wires
+
+How are my going to explain this to the boss? I even remember seeing the via while doing cleanup to the layout, something distracted me I guess.
+
+![Irrigate7^3 Via Opps](./14320^3,ViaOnWires.png "Irrigate7^3 Via Opps")
 
 
 ## ^2 Digital IO Protection Resistor

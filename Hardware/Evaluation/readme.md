@@ -7,6 +7,7 @@ This shows the setup and method used for evaluation of Irrigate7.
 
 # Table Of Contents:
 
+8. ^3 CL8 Interface
 7. ^2 Crystal Check
 6. ^2 RS422 Shield
 5. ^2 Lifting DIN Mount
@@ -14,6 +15,13 @@ This shows the setup and method used for evaluation of Irrigate7.
 3. ^1 CCtest
 2. ^1 With RPUftdi^2
 1. ^0A LT3652 Timer
+
+
+## ^3 CL8 Interface
+
+The IDE connector just fits, though there is interference with the shield. I can make the board larger but that will cost more, I think this will do.
+
+![Irrigate7^3 CL8 Interface](./Irrigat7^3,WithCL8Interface.jpg "Irrigate7^3 CL8 Interface")
 
 
 ## ^2 Crystal Check
@@ -24,6 +32,7 @@ The crystal has 27pF crystal capacitors which combine with the board's parasitic
 ![Irrigate7^2 Crystal Check On DSO](./Irrigat7^2,CrystalCheckOnDSO.jpg "Irrigate7^2 Crystal Check On DSO")
 
 Previous versions had a different crystal that needed less capacitance (which unfortunately got copied onto other boards).
+
 
 ## ^2 RS422 Shield
 

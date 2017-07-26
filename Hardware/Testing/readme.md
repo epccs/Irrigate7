@@ -63,11 +63,11 @@ Apply a current limited (20mA) supply to the PV input with reverse polarity and 
 
 ## TPS3700 Window Comparator 
 
-Apply a current limited (30mA) supply starting at 12V to the +BAT and -BAT connector. Connect 1k ohm between U2 pin 1 and pin 2 to give the VIN latch a load. Short J22 pin 2 and pin 3, then release the short, which will force the battery to connect. Check that PWR has been latched to the battery with TP4 and that the VIN latch has not set with U2 pin 1. Increase the supply slowly until VIN on U2 pin 1 has power, but no more than 14V. This is the voltage at which the load connects, and should be about 13.1V. Now slowly reduce the supply until the LED turns off. This is the voltage at which the battery disconnects and should be about 11.58V.
+Connect 1k ohm between U2 pin 1 and pin 2 to give the VIN latch a load. Apply a current limited (30mA) supply starting at 12V to the +BAT and -BAT connector. Short J22 pin 2 and pin 3, then release the short, which will force the battery to connect. Check that PWR has been latched to the battery with TP4 and that the VIN latch has not set with U2 pin 1. Increase the supply slowly until VIN on U2 pin 1 has power, but no more than 14V. This is the voltage at which the load connects, and should be about 13.1V. Now slowly reduce the supply until the LED turns off. This is the voltage at which the battery disconnects and should be about 11.58V.
 
 ```
-{ "LOAD_CONNNECT":[13.03,],
-  "DISCONNECT":[11.47,] }
+{ "LOAD_CONNNECT":[13.03,12.94,],
+  "DISCONNECT":[11.47,11.40,] }
 ```
 
 
@@ -78,7 +78,8 @@ Connect 100 kOhm resistor to both the PV side and BAT side thermistor inputs to 
 NOTE: the LT3652 goes into fault when started into my HP6050A in CC mode, which is by design. I can start the LT3652 with the load off, or in CV mode and then switch to CC. This note is to remind me that it is an expected behavior.
 
 ```
-{ "VIN@100K":[13.60,] }
+{ "VIN@100K":[13.60,13.65,],
+  "VIN@OPEN":[14.35,]}
 ```
 
 
@@ -87,8 +88,8 @@ NOTE: the LT3652 goes into fault when started into my HP6050A in CC mode, which 
 Connect 100 kOhm resistor to both the PV side and BAT side thermistor inputs to simulate room temperature. Connect an electronic load to the +BAT and -BAT. Connect 1k ohm between U2 pin 1 and pin 2 to give the VIN latch a small load. Set the electronic load voltage to 12.8V to simulate a battery. Connect +PV and -PV to a CC/CV mode supply with CC set at 50mA and  CV set at 0V. Apply power and increase the CV setting to 21V. Verify the solar power point voltage is about 16.9V, increase the supply current CC to 150mA and measure the power point voltage. Next increase the supply CC setting until its voltage increases to 21V, e.g. the supply changes from CC to CV mode, and check that the charge controller is current limiting at about 1.3A with 0R068 placed on R3, also check if U1 (LT3652) is getting hot. Note that the voltage at UUT is higher than at the load because the wires drop some voltage (the load is still running at the 12.8V). 
 
 ```
-{ "PP100K@150mA&amp;12V8":[16.89,],
-  "CURR_LIMIT":[1.33] }
+{ "PP100K@150mA&amp;12V8":[16.89,16.86,],
+  "CURR_LIMIT":[1.33,1.30,] }
 ```
 
 
@@ -97,7 +98,7 @@ Connect 100 kOhm resistor to both the PV side and BAT side thermistor inputs to 
 Apply a 30mA current limited 5V source to +5V (J10 pin 4 and pin 3). Check that the input current is for a blank MCU (e.g. less than 5mA). Turn off the power.
 
 ```
-{ "I_IN_BLANKMCU_mA":[3.6,]}
+{ "I_IN_BLANKMCU_mA":[3.6,2.5,]}
 ```
 
 Note if the fuse need set back to the factory (OEM) values there is a make rule, but VIN needs to be jumperd to +5V for the ICSP tool to work (the ESD_NODE needs bias for SCK on the tool to work).
@@ -110,7 +111,7 @@ Setup a current limited supply with 5V and about 30mA limit. Connect the supply 
 C106 (2200uF) is not on board, it is mounted in the plugable connector between BOOST (J10 pin 1) and 0V (J10 pin 3).
 
 ``` 
-{"BOOST_DISABLED_mA":[0.2,,] }
+{"BOOST_DISABLED_mA":[0.2,0.01,] }
 ``` 
 
 
@@ -119,7 +120,7 @@ C106 (2200uF) is not on board, it is mounted in the plugable connector between B
 Add U2 to the board now. Also jumper VIN on U2 pin 1 to +5V to bias the EDS_NODE. Apply a 60mA current limited 5V source to +5V (J10 pin 4 and pin 3). Measure the input current for referance (it takes time to settle, both 10mA ICP1 and ICP3 jumper is off).
 
 ```
-{ "I_IN_BLANKMCU_WITH_U2_mA":[5.4,]}
+{ "I_IN_BLANKMCU_WITH_U2_mA":[5.4,5.5,]}
 ```
 
 Install Git and AVR toolchain on Ubuntu (16.04, on an old computer try https://wiki.ubuntu.com/Lubuntu). 
@@ -174,13 +175,14 @@ Use picocom to set the bootload address on the RPUftdi shield. The RPUftdi is at
 picocom -b 38400 /dev/ttyUSB0
 ...
 Terminal ready
-/0/address 41
+/0/iaddr 41
 {"address":"0x29"}
-/0/buffer 3,49
+/0/ibuff 3,49
 {"txBuffer":[{"data":"0x3"},{"data":"0x31"}]}
-/0/read? 2
+/0/iread? 2
 {"rxBuffer":[{"data":"0x3"},{"data":"0x31"}]}
 ```
+
 Exit picocom (Cntl^a and Cntl^x). Plug an [RPUadpt] shield with [Remote] firmware onto the UUT board. Note the RPUadpt address defaults to 0x31 when its firmware was installed.
 
 [RPUadpt]: https://github.com/epccs/RPUadpt
@@ -195,7 +197,7 @@ Once the UUT connects power (battery charged to > 13.1V) check that the VIN pin 
 Measure the +5V supply at J7 pin 6 and pin 5.
 
 ```
-{ "+5V":[4.9959,] }
+{ "+5V":[4.9959,4.9612,] }
 ```
 
 Edit the SelfTest main.c such that "#define REF_EXTERN_AVCC 4995900UL" has the correct value for the UUT. Next, run the bootload rule in the Makefile to upload the self-test firmware to the UUT that the remote shield is mounted on.
@@ -281,9 +283,9 @@ Before truning off the PV power check that the VIN pin on the shield has no powe
 Run the SelfTest for each of the three voltage settings and measure the value with a DMM.
 
 ```
-{ "9VBOOSTLD_V":[9.2,],
-"12VBOOST_V":[12.2,],
-"24VBOOST_V":[24.1,]}
+{ "9VBOOSTLD_V":[9.2,9.1,],
+"12VBOOST_V":[12.2,12.1,],
+"24VBOOST_V":[24.1,24.1,]}
 ```
 
 ## Solenoid Test

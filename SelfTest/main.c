@@ -33,7 +33,7 @@ along with the Arduino DigitalIO Library.  If not, see
 
 // Save the Value of the References for ADC converter 
 // measure AVCC and put it hear in uV e.g. 5.00V is 5000000UL
-#define REF_EXTERN_AVCC 4995900UL
+#define REF_EXTERN_AVCC 4961200UL
 // I am not sure how to measure the 1V1 bandgap, this is just a holding place
 #define REF_INTERN_1V1 1100000UL
 
@@ -234,7 +234,7 @@ void test(void)
     if (!digitalRead(ICP3)) 
     { 
         passing = 0; 
-        printf_P(PSTR(">>> ICP3 should be high.\r\n"));
+        printf_P(PSTR(">>> ICP3 should be high (note an RPUpi pulls down on MOSI).\r\n"));
     }
     
     // CC nFAULT with weak pull-up

@@ -55,12 +55,12 @@ Bootloader options include [optiboot] and [xboot]. Uploading through a bootloade
 ![Status](./status_icon.png "Irrigate7 Status")
 
 ```
-        ^4  Done: 
-            WIP: Design, 
-            Todo: Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
+        ^4  Done: Design, Layout, BOM, Review*,
+            WIP: Order Boards,
+            Todo: Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
-            Via was placed on wires for nSHDN and battery polarity protection
-            Test Points
+            Via was placed on wires for LT3652 nSHDN and battery polarity protection on ^3 
+            Add Test Points
 
         ^3  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing, 
             WIP: Evaluation.

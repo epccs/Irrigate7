@@ -14,7 +14,7 @@ It is similar to the [RPUno] but has integrated K7 (which is a scaled up [K3]). 
 [RPUftdi]: https://github.com/epccs/RPUftdi
 [RPUadpt]: https://github.com/epccs/RPUadpt
 
-[Forum](http://rpubus.org/bb/viewforum.php?f=17)
+[Forum](https://rpubus.org/bb/viewforum.php?f=17)
 
 [HackaDay](https://hackaday.io/project/25599-irrigate7-a-solar-powered-atmega1284p-board)
 
@@ -50,10 +50,10 @@ cd Irrigate7/Adc
 make [bootload]
 ```
 
-* [gcc-avr](http://packages.ubuntu.com/search?keywords=gcc-avr)
-* [binutils-avr](http://packages.ubuntu.com/search?keywords=binutils-avr)
-* [gdb-avr](http://packages.ubuntu.com/search?keywords=gdb-avr)
-* [avr-libc](http://packages.ubuntu.com/search?keywords=avr-libc)
-* [avrdude](http://packages.ubuntu.com/search?keywords=avrdude)
+* [gcc-avr](https://packages.ubuntu.com/search?keywords=gcc-avr)
+* [binutils-avr](https://packages.ubuntu.com/search?keywords=binutils-avr)
+* [gdb-avr](https://packages.ubuntu.com/search?keywords=gdb-avr)
+* [avr-libc](https://packages.ubuntu.com/search?keywords=avr-libc)
+* [avrdude](https://packages.ubuntu.com/search?keywords=avrdude)
 
 The software is a guide, it is in C because that is what works for me. The toolchain has been marvelous, but your mileage may vary. I have had issues with ISP tools but found that an Arduino Uno loaded with the ArduinoISP example sketch provided in the IDE has worked reliably for placing the bootloader. 

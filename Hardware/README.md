@@ -2,7 +2,16 @@
 
 ## Overview
 
-This board is going through an over haul. It will retain the solenoid drivers, ICP1 loop, and ATmega1284p.
+ATmega1284P based controller board with options for DIN mounts and 3.5mm connections. Six digital I/O (2, 3, 24\*, 25\*, 26\*, 27\*) with level shift, the last four (\*) are also analog channels (0..3). Four 22mA current source for use with loop sensors are also available with enables (4, 5, 6, 7). One 17mA current source for the pulse sensor with enable (9). ICP1 is pulled down when enough current (>7mA) arrives from the pulse sensor. Alternat power input may be enabled (14), and power to the shield VIN pin may be disabled (22). Power with 7 thru 36V DC.
+
+This Programmable Controller board has connections for seven Latching Solenoid Drivers
+    
+It is similar to an [RPUno] with integrated [K3] drivers. I plan to link a few to a Raspberry Pi with an [RPUpi] shield on one and the others will have an [RPUadpt] shield. The Raspberry Pi will host the toolchain which has an upload tool that can bootload firmware over the serial bus and push or pull firmware source from Github.
+
+[RPUno]: https://github.com/epccs/RPUno
+[RPUpi]: https://github.com/epccs/RPUpi
+[K3]: https://github.com/epccs/Driver/tree/master/K3
+[RPUadpt]: https://github.com/epccs/RPUadpt
 
 Bootloader options include [optiboot] and [xboot]. 
 
@@ -12,15 +21,14 @@ Bootloader options include [optiboot] and [xboot].
 ## Inputs/Outputs/Functions
 
 ```
-        ATmega1284p is a easy to use microcontroller
-        12V SLA with an LT3652 solar charge controller 
-        High side battery current sensing ADC2 (Charging) and ADC3 (Discharging).
-        Vin power will automatically disconnect when the battery is low (about 11.58V).
-        Digital input/outputs (D TBD) with level shift.
+        ATmega1284p toolchain runs everywhere (Raspberry Pi, Desktop, Travis CI)
+        Input/Outputs protected up to suppy voltage.
         ICP1 for pulse type flow meter.
-        Six Analog channels (ADC0..ADC5).
-        Six Currrent sources (CS0..CS5) with enable for loop power.
+        ICP1 current source.
+        Four Analog or Digital channels (ADC0..ADC3).
+        Four Currrent sources (CS0..CS3) for loop sensors.
         Power to the Shield Vin pin may be disabled (D 22).
+        Two Digital I/O (have UART or INT option)
         Input power 7..36 VDC.
 ```
 
@@ -36,7 +44,7 @@ Bootloader options include [optiboot] and [xboot].
 ```
         AREF from ATmega1284p is not connected to the header.
         3V3 is not present on the board, the header pin is not connected.
-        Alt power input is for advanced DIY users that can repair their own boards.
+        Alt power input is for small solar power (e.g. 1A max).
 ```
 
 
@@ -54,38 +62,22 @@ Bootloader options include [optiboot] and [xboot].
 ![Status](./status_icon.png "Irrigate7 Status")
 
 ```
-        ^5  Done: 
-            WIP: Design, 
-            Todo: Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
+        ^5  Done: Design, Layout,
+            WIP: BOM, 
+            Todo: Review*, Order Boards, Assembly, Testing, Evaluation.
+            *during review the Design may change without changing the revision.
             remove LT3652 and all related parts
             add alternate power input and enalbe with digital TBD
             add level shift to ADC inputs (MIX)
             move nSS from D_5 to D_10 and use it for SPI 
             remove ICP3 input and use it for SPI
             remove D 12 and 13 and use for SPI
-            use digital lines TBD to control CS0..CS5
+            use digital lines D 4..7 to control CS0..CS3
+            use digital lines D 9 to control CS_ICP1
 
         ^4  Done: Design, Layout, BOM, Review*, Order Boards,
             WIP: halt (the LT3652 was found to be useless with a 12V system).
             Todo: Assembly, Testing, Evaluation.
-            *during review the Design may change without changing the revision.
-            Via was placed on wires for LT3652 nSHDN and battery polarity protection on ^3 
-            Add Test Points
-
-        ^3  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing, 
-            WIP: Evaluation.
-            Todo: 
-            *during review the Design may change without changing the revision.
-            Pull up IO9 so it is not floating at power up.
-            location: 2017-7-26 Storage (it may be used for Evaluation).
-
-        ^2  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing,
-            WIP: Evaluation.
-            location: 2017-6-26 Test Bench.
-
-        ^1  Done: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
-            location: 2016-5-13 Test Bench.
-                      2017-6-12 scraped
 ```
 
 Debugging and fixing problems i.e. [Schooling](./Schooling/)
@@ -137,13 +129,11 @@ The SMD [Reflow] is done with a small IR oven.
 
 # How To Use
 
-This board is like an [RPUno] but has an ATmega1284p and Latching solenoid drivers. The solenoid drivers are like [K3] but there are more of them. I have been running a K3 board with three latching valves controlled by an RPUno for over a year doing 10 cycles per day on each valve. 
+This board is like an [RPUno] but has an ATmega1284p and Latching (or holding) solenoid drivers. The solenoid drivers are like [K3] but there are more of them. I have been running a K3 board with three latching valves controlled by an RPUno for over a year doing 10 cycles per day on each valve. 
 
 [K3]: https://github.com/epccs/Driver/tree/master/K3
 [RPUno]: https://github.com/epccs/RPUno/
 
-Latching solenoids are widely available but they don't often say how to power them. I think it is because the idea of sending a current pulse to the coil is fairly complicated. Most of the coils will go up in smoke if the current flow is for very long. The pulse time is determined by the coil resistance and the size of capacitor discharged. Unfortunately, most manufacturers don't rate their products. So I sort of need to open one up and see what they are doing. For example, the battery-operated controller for my valves has a 2200uF capacitor that is charged to about 20V. To test the coil I charge a capacitor of that size to 12V and see if it can latch it, and then 24V. The risk of damage to the coil increases with capacitor size and voltage, so stay with 2200uF or a little less. It is probably worth trying to figure how reliable it latches at 12V (I end up using 24V). The board has a jumper to select 9V, 12V, or 24V.
+Latching solenoids are widely available but they don't often say how to power them. I think it is because the idea of sending a current pulse to the coil is fairly complicated. Some of the coils will go up in smoke if the current flow is for very long. The pulse time is determined by the coil resistance and the size of capacitor discharged. Unfortunately, most manufacturers don't rate their products. So I sort of need to open the electronics up and see what they are doing. For example, the battery-operated controller for my valves has a 2200uF capacitor that is charged to about 20V. To test the coil I charge a capacitor of that size to 12V and see if it can latch it, and then 24V. The risk of damage to the coil increases with capacitor size and voltage, so I stay with 2200uF. It is probably worth trying to figure how reliable it latches at 12V but I used 24V on my setup. The board can software select 9V, 12V, or 24V.
 
-If the solenoid driver bridge is shorted when the capacitor is discharged it will damage both the selected half bridge and the common half bridge. The bridge drives have a 17mA current source used to test for a shorted bridge before powering the boost converter. The 17mA test current is sent through a LED which should sort of flicker during normal operation, but if it stays on when D 15 is HIGH, then a half bridge has been damaged and the boost supply will not start. It is easy enough to find the short with a DMM, and reworking the SMD device should be possible, they are large SMD components (see the bill of materials for the parts I used). 
-
-TBD
+If the solenoid driver bridge is shorted when the capacitor is discharged it will damage both the selected half bridge and the common half bridge. The bridge drives are tested with a 17mA current source that checks for a shorted bridge before powering the boost converter. The 17mA test current is sent through a LED which should flicker during normal operation, but if it stays on when the boost supply is enabled, then a half bridge has been damaged and the boost supply will not run until the failed parts are replaced. It is easy enough to find the short with a DMM, and reworking the SMD device should be possible, they are large SMD components (see the bill of materials for the parts I used). 

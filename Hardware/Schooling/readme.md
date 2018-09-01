@@ -4,16 +4,30 @@ Some lessons I learned doing Irrigate7.
 
 # Table Of Contents:
 
-10. ^3 Via on Wires
-9. ^2 Digital IO Protection Resistor
-8. ^2 Pull Up IO9
-7. ^1 RPUno
-6. ^1 CL8
-5. ^1 K3
-4. ^1 Digital IO Current Limit Resistor
-3. ^0 C1 Bypass Moved to LT3652 VIN
-2. ^0 LMV358 Does Not have 5V Befor Battery Connect
+1. ^4 ICP3 Remove
+1. ^4 LT3652 Removed
+1. ^3 Via on Wires
+1. ^2 Digital IO Protection Resistor
+1. ^2 Pull Up IO9
+1. ^1 RPUno
+1. ^1 CL8
+1. ^1 K3
+1. ^1 Digital IO Current Limit Resistor
+1. ^0 C1 Bypass Moved to LT3652 VIN
+1. ^0 LMV358 Does Not have 5V Befor Battery Connect
 1. ^0 C11 Interference with HW1 (DIN mount)
+
+
+## ^4 ICP3 Remove
+
+ICP3 does not have a doubled buffered capture, so I can't use it to measure the duty cycle as I wanted for temperature and moisture sensors.  It makes more sense to use its alternate function (MOSI) for dedicated SPI to an SD card for data recording or to a Raspberry Pi for data acquisition (e.g. to acquire capture events and stream them directly to the SBC).
+
+
+## ^4 LT3652 Remove
+
+The MPPT LT3652 provides no usefulness when a 12V solar panel is used to charge a 12V battery. The PV panel MPP is at about 15V during summer temperature, so it is considerably more efficient to connect solar directly to the battery. Even when cold converting the solar voltage down to the battery voltage is now much more efficient (due to conversion loss).
+
+After overhauling the RPUno and testing this summer I am convinced that the P-CH controlled alternate power input is the way to go. The resulting power input is more flexible (takes 7..36VDC) and general purpose.
 
 
 ## ^3 Via on Wires

@@ -62,9 +62,9 @@ Bootloader options include [optiboot] and [xboot].
 ![Status](./status_icon.png "Irrigate7 Status")
 
 ```
-        ^5  Done: Design, Layout,
-            WIP: BOM, 
-            Todo: Review*, Order Boards, Assembly, Testing, Evaluation.
+        ^5  Done: Design, Layout, BOM, 
+            WIP: Review*,
+            Todo: Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             remove LT3652 and all related parts
             add alternate power input and enalbe with digital TBD
@@ -113,7 +113,20 @@ Check correct assembly and function with [Testing](./Testing/)
 
 # Bill of Materials
 
-Import the [BOM](./Design/14320,BOM.csv) into LibreOffice Calc (or Excel), or use a text editor.
+The BOM is a CVS file, import it into a spreadsheet program like LibreOffice Calc (or Excel), or use a text editor.
+
+Option | BOM's included
+----- | ----- 
+A. | [BRD] 
+M. | [BRD] [SMD] [HDR] 
+W. | [BRD] [SMD] [HDR] [PLUG]
+Z. | [BRD] [SMD] [HDR] [PLUG] [DIN]
+
+[BRD]: ./Design/14320BRD,BOM.csv
+[SMD]: ./Design/14320SMD,BOM.csv
+[HDR]: ./Design/14320HDR,BOM.csv
+[PLUG]: ./Design/14320PLUG,BOM.csv
+[DIN]: ./Design/14320DIN,BOM.csv
 
 
 # Assembly
@@ -134,6 +147,6 @@ This board is like an [RPUno] but has an ATmega1284p and Latching (or holding) s
 [K3]: https://github.com/epccs/Driver/tree/master/K3
 [RPUno]: https://github.com/epccs/RPUno/
 
-Latching solenoids are widely available but they don't often say how to power them. I think it is because the idea of sending a current pulse to the coil is fairly complicated. Some of the coils will go up in smoke if the current flow is for very long. The pulse time is determined by the coil resistance and the size of capacitor discharged. Unfortunately, most manufacturers don't rate their products. So I sort of need to open the electronics up and see what they are doing. For example, the battery-operated controller for my valves has a 2200uF capacitor that is charged to about 20V. To test the coil I charge a capacitor of that size to 12V and see if it can latch it, and then 24V. The risk of damage to the coil increases with capacitor size and voltage, so I stay with 2200uF. It is probably worth trying to figure how reliable it latches at 12V but I used 24V on my setup. The board can software select 9V, 12V, or 24V.
+Latching (or Holding) solenoids are widely available but they don't often say how to power them. I think it is because the idea of sending a current pulse to the coil is fairly complicated. Some coils will go up in smoke if the current flow is for to long. The pulse time is determined by the coil resistance and the size of capacitor discharged. Unfortunately, most manufacturers don't rate their products. So I sort of need to open the electronics up and see what they are doing. For example, the battery-operated controller for my valves has a 2200uF capacitor that is charged to about 20V. To test the coil I charge a capacitor of that size to 12V and see if it can latch it, and then 24V. The risk of damage to the coil increases with capacitor size and voltage, so I stay with 2200uF. It is probably worth trying to figure how reliable it latches at 12V but I used 24V on my setup. The board can software select 9V, 12V, or 24V.
 
 If the solenoid driver bridge is shorted when the capacitor is discharged it will damage both the selected half bridge and the common half bridge. The bridge drives are tested with a 17mA current source that checks for a shorted bridge before powering the boost converter. The 17mA test current is sent through a LED which should flicker during normal operation, but if it stays on when the boost supply is enabled, then a half bridge has been damaged and the boost supply will not run until the failed parts are replaced. It is easy enough to find the short with a DMM, and reworking the SMD device should be possible, they are large SMD components (see the bill of materials for the parts I used). 

@@ -36,6 +36,7 @@ Bootloader options include [optiboot] and [xboot].
 
 ```
         Flow Meter Data Acquisition using Capture Hardware.
+        Latching/Holding (Pulse) Solenoids
         SHLD_VIN to the shield can be powered down while ATmega1284p continues to run.
 ```
 
@@ -62,9 +63,9 @@ Bootloader options include [optiboot] and [xboot].
 ![Status](./status_icon.png "Irrigate7 Status")
 
 ```
-        ^5  Done: Design, Layout, BOM, 
-            WIP: Review*,
-            Todo: Order Boards, Assembly, Testing, Evaluation.
+        ^5  Done: Design, Layout, BOM, Review*, Order Boards,
+            WIP: Assembly,
+            Todo: Testing, Evaluation.
             *during review the Design may change without changing the revision.
             remove LT3652 and all related parts
             add alternate power input and enalbe with digital TBD
@@ -150,3 +151,10 @@ This board is like an [RPUno] but has an ATmega1284p and Latching (or holding) s
 Latching (or Holding) solenoids are widely available but they don't often say how to power them. I think it is because the idea of sending a current pulse to the coil is fairly complicated. Some coils will go up in smoke if the current flow is for to long. The pulse time is determined by the coil resistance and the size of capacitor discharged. Unfortunately, most manufacturers don't rate their products. So I sort of need to open the electronics up and see what they are doing. For example, the battery-operated controller for my valves has a 2200uF capacitor that is charged to about 20V. To test the coil I charge a capacitor of that size to 12V and see if it can latch it, and then 24V. The risk of damage to the coil increases with capacitor size and voltage, so I stay with 2200uF. It is probably worth trying to figure how reliable it latches at 12V but I used 24V on my setup. The board can software select 9V, 12V, or 24V.
 
 If the solenoid driver bridge is shorted when the capacitor is discharged it will damage both the selected half bridge and the common half bridge. The bridge drives are tested with a 17mA current source that checks for a shorted bridge before powering the boost converter. The 17mA test current is sent through a LED which should flicker during normal operation, but if it stays on when the boost supply is enabled, then a half bridge has been damaged and the boost supply will not run until the failed parts are replaced. It is easy enough to find the short with a DMM, and reworking the SMD device should be possible, they are large SMD components (see the bill of materials for the parts I used). 
+
+## Some Latching Things for consideration
+
+* Push Actuator: Delta DSMS-0730-12, 12V@2.7A for 45mSec
+* Power (440VAC@60A) Relay: TE EW60-1A3-BL12D04, 12V@125mA for 100mSec
+* TBOS Latching Irrigation Solenoid: Rainbird TBOSPSOL, unknonw but probably 9V for 50mSec
+* NODE Latching Irrigation Solenoid: Hunter 458200, 9V for 50mSec

@@ -4,14 +4,15 @@ From <https://github.com/epccs/Irrigate7/>
 
 ## Overview
 
-This ATmega1284p based controller board is programmable with the open source GCC toolchain for AVR. It has seven half H-bridge and a common half H-bride to control seven Latching (or Holding) Solenoids, a Capture input for timing pulse events (e.g. turbine rotation of a flow meter), and four Analog inputs with current sources to control and measure loop sensors (e.g. pressure, temperature...). Power with 7 thru 36V DC.
+This ATmega1284p based controller board has seven half H-bridge and a common half H-bride to control seven Latching (or Holding) Solenoids, a Capture input for timing pulse events (e.g. turbine rotation of a flow meter), and four Analog inputs with current sources to control and measure loop sensors (e.g. pressure, temperature...). Power with 7 thru 36V DC.
 
-It is similar to the [RPUno] but has integrated K7 (which is a scaled up [K3]). It's MCU is connected to headers that work with the [RPUpi], or [RPUadpt] shields.
+It is similar to the [RPUno] but has integrated K7 (which is a scaled up [K3]). It's MCU is connected to headers that work with the [RPUpi], or [RPUadpt] shields. The bootload port works with [USBuart].
 
 [K3]: https://github.com/epccs/Driver/tree/master/K3
 [RPUno]: https://github.com/epccs/RPUno
 [RPUpi]: https://github.com/epccs/RPUpi
 [RPUadpt]: https://github.com/epccs/RPUadpt
+[USBuart]: https://github.com/epccs/Driver/tree/master/USBuart
 
 [Forum](https://rpubus.org/bb/viewforum.php?f=17)
 
@@ -23,7 +24,7 @@ It is similar to the [RPUno] but has integrated K7 (which is a scaled up [K3]). 
 
 ## [Hardware](./Hardware)
 
-Hardware files include schematic, bill of materials, and various notes for testing and evaluation. The [Eagle] files are kept in a different location.
+Hardware files include schematic, bill of materials, and notes for testing and evaluation. The [Eagle] files are kept in a different location.
 
 [Eagle]: https://github.com/epccs/Eagle/tree/master/Irrigate7
 

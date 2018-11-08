@@ -1,0 +1,3 @@
+[submodule "xboot"]
+	path = xboot
+	url = https://github.com/epccs/xboot

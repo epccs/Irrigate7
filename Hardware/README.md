@@ -63,9 +63,9 @@ Bootloader options include [optiboot] and [xboot].
 ![Status](./status_icon.png "Irrigate7 Status")
 
 ```
-        ^5  Done: Design, Layout, BOM, Review*, Order Boards,
-            WIP: Assembly,
-            Todo: Testing, Evaluation.
+        ^5  Done: Design, Layout, BOM, Review*, Order Boards, Assembly,
+            WIP: Testing,
+            Todo: Evaluation.
             *during review the Design may change without changing the revision.
             remove LT3652 and all related parts
             add alternate power input and enalbe with digital TBD

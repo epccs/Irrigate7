@@ -10,22 +10,18 @@ This is a list of Test preformed on each Irrigate7 after assembly.
 1. [Basics](#basics)
 2. [Assembly check](#assembly-check)
 3. [IC Solder Test](#ic-solder-test)
-4. [Reverse Battery Protection](#reverse-battery-protection)
-5. [Battery Disconnect](#battery-disconnect)
 6. [Power Protection](#power-protection)
-7. [TPS3700 Window Comparator](#tps3700-window-comparator)
-8. [LT3652 Power Up Without Battery](#lt3652-power-up-without-battery)
-9. [LT3652 Load Test](#lt3652-load-test)
+7. [Power Without SMPS](#power-without-smps)
+9. [K7 Bias 5V](#k7-bias-5v)
 10. [Bias +5V](#bias-5v)
-11. [K7 Bias 5V](#k7-bias-5v)
-12. [20mA Source](#current-sources)
-13. [Set MCU Fuse and Install Bootloader](#set-mcu-fuse-and-install-bootloader)
+12. [Set MCU Fuse and Install Bootloader](#set-mcu-fuse-and-install-bootloader)
+13. [Install SMPS](install-smps)
 14. [Self Test](#self-test)
 
 
 ## Basics
 
-These tests are for an assembled Irrigate7 board 14320^2 which may be referred to as a Unit Under Test (UUT). If the UUT fails and can be reworked then do so, otherwise it needs to be scraped. 
+These tests are for an assembled Irrigate7 board 14320^5 which may be referred to as a Unit Under Test (UUT). If the UUT fails and can be reworked then do so, otherwise it needs to be scraped. 
 
 **Warning: never use a soldering iron to rework ceramic capacitors due to the thermal shock.**
     
@@ -38,92 +34,57 @@ Items used for test.
 
 After assembly check the circuit carefully to make sure all parts are soldered and correct, note that the device making is labeled on the schematic and assembly drawing.
     
-NOTE: U2 is not yet on the board, so everything with +5V will not have power.
+NOTE: U2 is not yet on the board, so +5V will not have power. C105 (2200uF) is also not on board.
 
 
 ## IC Solder Test
 
-The bottom pad on U1 dissipates heat as well as providing a ground, it is not connected to any other pin. The 0V plane is ground for this test. Check that a diode drop is present from each pin to the ground by measuring with a DMM's diode test between each pin and the 0V plane (reversed polarity). U1 pins 12, 10 and 9 are connected to L1 and R3 and read with a low (.13V) value. U2 not pop yet. U3 and U4 give a diode value on pins 1 and 5, while pins 3 and 4 are connected to R3 and L1 and read with a low value. U5 and U6 gives normal diode values where expected. U5 pin 2 and U6 pins 3, 5, 21 are connectd to ground and should have a short to 0V.
+U2 is not yet populated. Check that a diode drop to 0V is present from a circuit board pad that is connected to each of the pins of U1, and U3 by measuring with a DMM's diode test set up for reversed polarity. Consult the schematic to determine which pins can be skipped (e.g. ground, power rail, ...).
 
-
-## Reverse Battery Protection
-
-Apply a current limited (20mA) supply set with 14V to the +BAT and -BAT connector in reverse and verify that the voltage does not get through to TP4. Note some voltage (.2V) will be seen on TP4 because of how the shutdown through Q3 works.
-    
-
-## Battery Disconnect
-
-Apply a current limited (20mA) supply set with 14V to the +BAT and -BAT connector and verify that voltage does not get through to TP4. 
+This is a simplified In-Circuit Test (ICT). It could become more valuable if the node voltage driven with the current source is recorded for each tested location and then used with statistics to determine test limits for each location. 
 
 
 ## Power Protection
 
-Apply a current limited (20mA) supply to the PV input with reverse polarity and ramp the voltage up to 30V, verify that no current flows.
+Apply a current limited (20mA) supply set with 5V to the PWR and 0V connector J1 in reverse and verify that the voltage does not get through. Adjust the supply to 36V and verify no current is passing.
 
 
-## TPS3700 Window Comparator 
+## Power Without SMPS
 
-Connect 1k ohm between U2 pin 1 and pin 2 to give the VIN latch a load. Apply a current limited (30mA) supply starting at 12V to the +BAT and -BAT connector. Short J22 pin 2 and pin 3, then release the short, which will force the battery to connect. Check that PWR has been latched to the battery with TP4 and that the VIN latch has not set with U2 pin 1. Increase the supply slowly until VIN on U2 pin 1 has power, but no more than 14V. This is the voltage at which the load connects, and should be about 13.1V. Now slowly reduce the supply until the LED turns off. This is the voltage at which the battery disconnects and should be about 11.58V.
-
-```
-{ "LOAD_CONNNECT":[13.03,12.94,],
-  "DISCONNECT":[11.47,11.40,] }
-```
-
-
-## LT3652 Power Up Without Battery
-
-Connect 100 kOhm resistor to both the PV side and BAT side thermistor inputs to simulate room temperature. Connect an electronic load to the +BAT and -BAT. Connect 1k ohm between U2 pin 1 and pin 2 to give the VIN latch a load. Connect a current limited (50mA) supply to the +PV and -PV inputs turn it on and increase the voltage to about 14V. Verify no output. Next, increase the supply voltage to 21V and verify a regulated voltage (13.63V) between +BAT and -BAT* pins. 
-
-NOTE: the LT3652 goes into fault when started into my HP6050A in CC mode, which is by design. I can start the LT3652 with the load off, or in CV mode and then switch to CC. This note is to remind me that it is an expected behavior.
+Apply a current limited (20mA) supply set with 7V to the PWR and 0V connector J1 and verify that the voltage does get through. Adjust the supply so the LED is on and stable and measure voltage, adjust supply to 30V measure input current. 
 
 ```
-{ "VIN@100K":[13.60,13.65,],
-  "VIN@OPEN":[14.35,]}
+{ "LEDON_V":[10.7,],
+  "PWR@7V_mA":[0.2,],
+  "PWR@30V_mA":[1.9,]}
 ```
-
-
-## LT3652 Load Test
-
-Connect 100 kOhm resistor to both the PV side and BAT side thermistor inputs to simulate room temperature. Connect an electronic load to the +BAT and -BAT. Connect 1k ohm between U2 pin 1 and pin 2 to give the VIN latch a small load. Set the electronic load voltage to 12.8V to simulate a battery. Connect +PV and -PV to a CC/CV mode supply with CC set at 50mA and  CV set at 0V. Apply power and increase the CV setting to 21V. Verify the solar power point voltage is about 16.9V, increase the supply current CC to 150mA and measure the power point voltage. Next increase the supply CC setting until its voltage increases to 21V, e.g. the supply changes from CC to CV mode, and check that the charge controller is current limiting at about 1.3A with 0R068 placed on R3, also check if U1 (LT3652) is getting hot. Note that the voltage at UUT is higher than at the load because the wires drop some voltage (the load is still running at the 12.8V). 
-
-```
-{ "PP100K@150mA&amp;12V8":[16.89,16.86,],
-  "CURR_LIMIT":[1.33,1.30,] }
-```
-
-
-## Bias +5V
-
-Apply a 30mA current limited 5V source to +5V (J10 pin 4 and pin 3). Check that the input current is for a blank MCU (e.g. less than 5mA). Turn off the power.
-
-```
-{ "I_IN_BLANKMCU_mA":[3.6,2.5,]}
-```
-
-Note if the fuse need set back to the factory (OEM) values there is a make rule, but VIN needs to be jumperd to +5V for the ICSP tool to work (the ESD_NODE needs bias for SCK on the tool to work).
 
 
 ## K7 Boost Bias 5V
 
-Setup a current limited supply with 5V and about 30mA limit. Connect the supply to BOOST_IN (J10 pin 2) and 0V (J10 pin 3) to the supply. Measure the input current bias while disabled.
+Setup a current limited supply with 5V and about 30mA limit. Connect the supply to BOOST_IN (J8 pin 2) and 0V (J8 pin 3) to the supply. Measure the input current bias while disabled.
 
-C106 (2200uF) is not on board, it is mounted in the plugable connector between BOOST (J10 pin 1) and 0V (J10 pin 3).
+Note: C105 (2200uF) is not on board.
 
 ``` 
-{"BOOST_DISABLED_mA":[0.2,0.01,] }
+{"BOOST_DISABLED_mA":[0.01,] }
 ``` 
+
+
+## Bias +5V
+
+Apply a 30mA current limited 5V source to +5V (J8 pin 4) and source return to 0V (J8 pin 3). Check that the input current is for a blank MCU (e.g. less than 5mA). Turn off the power.
+
+```
+{ "I_IN_BLANKMCU_mA":[4.5,]}
+```
+
+Note if the fuse needs set to the factory (OEM) values there is a make rule in the Bootloader folder.
 
 
 ## Set MCU Fuse and Install Bootloader
 
-Add U2 to the board now. Also jumper VIN on U2 pin 1 to +5V to bias the EDS_NODE. Apply a 60mA current limited 5V source to +5V (J10 pin 4 and pin 3). Measure the input current for referance (it takes time to settle, both 10mA ICP1 and ICP3 jumper is off).
-
-```
-{ "I_IN_BLANKMCU_WITH_U2_mA":[5.4,5.5,]}
-```
-
-Install Git and AVR toolchain on Ubuntu (16.04, on an old computer try https://wiki.ubuntu.com/Lubuntu). 
+Install Git and AVR toolchain on Ubuntu (18.04, on an old computer try https://wiki.ubuntu.com/Lubuntu). 
 
 ```
 sudo apt-get install git gcc-avr binutils-avr gdb-avr avr-libc avrdude
@@ -137,7 +98,7 @@ git clone https://github.com/epccs/Irrigat7
 cd ~/Irrigat7/Bootloader
 ```
 
-Connect a 5V supply with CC mode set at 30mA to the +5V (J10 pin 4) and  0V (J10 pin 3). Connect the ICSP tool (J17). The MCU needs its fuses set, so run the Makefile rule to do that. 
+Connect a 5V supply with CC mode set at 30mA to the +5V (J8 pin 4) and  0V (J8 pin 3). Connect the ISP tool (J13). The MCU needs its fuses set, so run the Makefile rule to do that. 
 
 ```
 make fuse
@@ -152,7 +113,17 @@ make isp
 Disconnect the ICSP tool and measure the input current, wait for the power to be settled. Turn off the power.
 
 ```
-{ "I_IN_16MHZ_EXT_CRYST_mA":[]}
+{ "I_IN_16MHZ_EXT_CRYST_mA":[23.5,]}
+```
+
+
+## Install SMPS
+
+Install U2 and measure its output voltage and input current with the supply set at 12.8V and a 30mA current limit.
+
+```
+{ "+5V_V":[5.0001,],
+  "I_IN_@12V8_mA":[13.5,]}
 ```
 
 

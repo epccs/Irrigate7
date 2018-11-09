@@ -16,7 +16,7 @@ It is similar to the [RPUno] but has integrated K7 (which is a scaled up [K3]). 
 
 [Forum](https://rpubus.org/bb/viewforum.php?f=17)
 
-[HackaDay](https://hackaday.io/project/25599-irrigate7-a-solar-powered-atmega1284p-board)
+[HackaDay](https://hackaday.io/project/25599-irrigate7-m1284p-board-for-holding-solenoids)
 
 ## Status
 
@@ -30,11 +30,11 @@ Hardware files include schematic, bill of materials, and notes for testing and e
 
 ## Example with RPU BUS 
 
-A serial bus that allows multiple controller boards to be connected to a host computer serial port. An [RPUpi] shield has a connector for a Pi Zero to act as the host computer, and connect to other boards with a [RPUadpt] shield over a daisy-chain of CAT5 cables. 
+RPUBUS is a serial bus that allows multiple controller boards to be connected to a host computer serial port. An [RPUpi] shield has a connector for a Pi Zero to act as the host computer, and connect to other boards with a [RPUadpt] shield over a daisy-chain of CAT5 cables. 
 
 ![MultiDrop](./Hardware/Documents/MultiDrop.png "RPUno MultiDrop")
 
-The host computer is able to use it's serial UART port with common software (e.g. avrdude, PySerial, picocom...) when communicating with the ATmega1284p. These programs don't need to known how to control the differential transceivers as would normally be necessary.
+The host computer is able to use it's serial UART port with common software (e.g. avrdude, PySerial, picocom...) when communicating with the ATmega1284p. 
 
 
 ## AVR toolchain
@@ -58,3 +58,11 @@ make
 * [avrdude](https://packages.ubuntu.com/search?keywords=avrdude)
 
 Use my software as guide to do your own, I use C because that is what works for me. The toolchain has been marvelous, but your mileage may vary. 
+
+## Serial Bootload
+
+After the compiler makes the executable  (a relocatable binary [ELF]) an uploader tool (avrdude) on a host computer is used to send it over a serial link to the bootloader that places it at the desired memory location. At this time I am trying [xboot] from Alex Forencich. I was interested in its ability to work with ATxmega, and wanted to try something other than [optiboot] (which also works with the ATmega1284p). 
+
+[ELF]: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
+[xboot]: https://github.com/alexforencich/xboot
+[optiboot]: https://github.com/MCUdude/optiboot_flash

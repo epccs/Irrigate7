@@ -237,7 +237,7 @@ http://creativecommons.org/licenses/by-sa/3.0</description>
 <pad name="K1" x="-11.43" y="-43.18" drill="0.8" shape="square"/>
 <pad name="K2" x="-7.62" y="-43.18" drill="0.8" shape="square"/>
 <pad name="K3" x="-3.81" y="-43.18" drill="0.8" shape="square"/>
-<pad name="I2C1" x="0" y="3.81" drill="0.8" shape="square"/>
+<pad name="SMBUS" x="0" y="3.81" drill="0.8" shape="square"/>
 <pad name="COM@K4" x="0" y="-46.99" drill="0.8" shape="square"/>
 <pad name="COM@K5" x="3.81" y="-46.99" drill="0.8" shape="square"/>
 <pad name="K4" x="0" y="-43.18" drill="0.8" shape="square"/>
@@ -536,7 +536,7 @@ MGR</text>
 <wire x1="9.652" y1="3.048" x2="7.62" y2="5.08" width="0.1524" layer="94"/>
 <pin name="!RTS" x="-25.4" y="2.54" visible="pad" length="short"/>
 <pin name="!CTS" x="-25.4" y="0" visible="pad" length="short"/>
-<pin name="I2C1" x="-25.4" y="-2.54" visible="pad" length="short"/>
+<pin name="SMBUS" x="-25.4" y="-2.54" visible="pad" length="short"/>
 <pin name="I2C0" x="-17.78" y="-10.16" visible="pad" length="short" rot="R90"/>
 <pin name="BM-!RST!" x="-12.7" y="-10.16" visible="pad" length="short" rot="R90"/>
 <pin name="PWR" x="-2.54" y="-10.16" visible="pad" length="short" rot="R90"/>
@@ -591,7 +591,7 @@ MGR</text>
 <wire x1="-33.02" y1="-10.922" x2="-35.56" y2="-10.922" width="0.254" layer="94"/>
 <pin name="TX" x="15.24" y="15.24" visible="pin" length="point" rot="R270"/>
 <pin name="RX" x="12.7" y="15.24" visible="pin" length="point" rot="R270"/>
-<text x="-30.226" y="5.08" size="1.9304" layer="94">Irrigate7 with
+<text x="-30.226" y="5.08" size="1.9304" layer="94">Irrigate7^5 with
 ATmega1284p</text>
 <pin name="I2C" x="10.16" y="15.24" visible="pin" length="point" rot="R270"/>
 <pin name="SPI" x="7.62" y="15.24" visible="pin" length="point" rot="R270"/>
@@ -831,9 +831,9 @@ ATmega1284p</text>
 <connect gate="G$1" pin="HOST_RX" pad="HOST-RX"/>
 <connect gate="G$1" pin="HOST_TX" pad="HOST-TX"/>
 <connect gate="G$1" pin="I2C0" pad="I2C0"/>
-<connect gate="G$1" pin="I2C1" pad="I2C1"/>
 <connect gate="G$1" pin="PWR" pad="5V"/>
 <connect gate="G$1" pin="SHDN" pad="SHDN"/>
+<connect gate="G$1" pin="SMBUS" pad="SMBUS"/>
 </connects>
 <technologies>
 <technology name=""/>
@@ -2785,7 +2785,7 @@ SENSOR</text>
 <wire x1="43.18" y1="35.56" x2="43.18" y2="68.58" width="0.1524" layer="91"/>
 <wire x1="43.18" y1="68.58" x2="40.64" y2="68.58" width="0.1524" layer="91"/>
 <wire x1="40.64" y1="68.58" x2="40.64" y2="73.66" width="0.1524" layer="91"/>
-<pinref part="U$1" gate="G$1" pin="I2C1"/>
+<pinref part="U$1" gate="G$1" pin="SMBUS"/>
 <wire x1="40.64" y1="73.66" x2="45.72" y2="73.66" width="0.1524" layer="91"/>
 <label x="37.084" y="36.322" size="1.27" layer="91"/>
 </segment>

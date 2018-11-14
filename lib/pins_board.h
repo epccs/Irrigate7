@@ -1,6 +1,6 @@
 /*
  * Pin definitions for Irrigate7 used with pin_num.h Digital IO library
- * Copyright (C) 2016 Ronald Sutherland
+ * Copyright (C) 2018 Ronald Sutherland
  *
  * This Library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,109 +26,92 @@
 // UART on Irrigate7 is for serial communication (never use these pins)
 #define RX0 0 
 #define TX0 1
+#define RX1 2
+#define TX1 3
 
-// Plugable Digital Input/Outputs with Level shift
-#define DIO2 2
-#define DIO3 3
-#define DIO4 4
-
-// Charge Controler
-#define CC_SHUTDOWN 5
-
-// Battery Control (Warning this will disconnect the battery)
-#define BAT_DISCONNECT 6
-
-// Charge Controler not Fault (note use a weak pull up to read fault state) 
-#define CC_nFAULT 7
+// Current Source Enable
+#define CS0_EN 4
+#define CS1_EN 5
+#define CS2_EN 6
+#define CS3_EN 7
 
 // ICP1 pin reads inverted from the plugable input with 100 Ohm termination
 #define ICP1 8
+#define CS_ICP1_EN 9
 
-// Current Source Enable
-#define CURR_SOUR_EN 9
-
-// Plugable Digital Input/Outputs with Level shift
-#define DIO10 10
-
-#define DIO11 11
-
-// SPI pins MISO and SCK is maped with plugable DIO
-#define DIO12 12
+// SPI 
+#define nSS 10
+#define MOSI 11
 #define MISO 12
-
-#define DIO13 13
 #define SCK 13
 
-// Irrigate7 has no led but this is the normal place it would be found
-#define LED_BUILTIN 13 
+// ALTernate power ENable for a small solar PV panel
+#define ALT_EN 14
 
-// SPI pin MOSI is mapped with ICP3
-#define MOSI 14
-#define ICP3 14
-
-//K3/K7/CL8 Interface
+//K3/K7 control
 #define K3_E3 15
 #define K7_NE2 15
-#define CL8_NE2 15
 #define K7_E3 16
 #define K3_NE2 16
-#define CL8_NE1 16
+#define K_A2 17
+#define K_A1 18
+#define K_A0 19
 
-// JTAG on Irrigate7 is mapped with K7
-#define TDI 16
-
-//K3/K7/CL8 Interface A0, A1, A2
-#define A2 17
-#define TDO 17
-
-#define A1 18
-#define TMS 18
-
-#define A0 19
-#define TCK 19
-
-// I2C on Irrigate7
+// I2C
 #define SDA 20
 #define SCL 21
 
 // VIN  pin shield power control
 #define SHLD_VIN_EN 22
 
-//K3/K7/CL8 Interface
-#define CL8_E3 23
+//K3/K7 Interface+
 #define K3_NE1 23
 #define K7_NE1 23
 
-// ADC channels
+// MIX IO has an ADC channel and DIO on each pin
 // There are values from 0 to 1023 for 1024 slots where each reperesents 1/1024 of the reference. Last slot has issues
 // https://forum.arduino.cc/index.php?topic=303189.0   
 
-// ADC0 has a Plugable input with a 20mA current source
-// its voltage is analogRead(ADC0)*(5.0/1024.0)
+// ADC0/DIO24 pin is available for the user
+//the ADC channel can be used with analogRead(ADC0)*(<referance>/1024.0)
 #define ADC0 0
+#define DIO24 24
 
-// ADC1 has a Plugable input with a 20mA current source
-// its voltage is analogRead(ADC1)*(5.0/1024.0)
+// ADC1/DIO25 pin is available for the user
+// the ADC channel can be used with analogRead(ADC1)*(<referance>/1024.0)
 #define ADC1 1
+#define DIO25 25
 
-// CHRG_ADC2 voltage is analogRead(CHRG_I)*(5.0/1024.0)/(0.068*50.0)
-#define CHRG_I 2
+// ADC2/DIO26 pin is available for the user
+// the ADC channel can be used with analogRead(ADC2)*(<referance>/1024.0)
+#define ADC2 2
+#define DIO26 26
 
-// DISCHRG_ADC3 voltage is analogRead(DISCHRG_I)*(5.0/1024.0)/(0.068*50.0)
-#define DISCHRG_I 3
+// ADC3/DIO27 pin is available for the user
+// the ADC channel can be used with analogRead(ADC3)*(<referance>/1024.0)
+#define ADC3 3
+#define DIO27 27
 
-// ADC4 has a Plugable input with a 20mA current source
-// its voltage is analogRead(ADC4)*(5.0/1024.0)
+// ADC4/DIO28 is used to select SMPS boost voltage
+// the ADC channel can be used with analogRead(ADC4)*(<referance>/1024.0) to read the feedback voltage
+// 9V boot set (DIO28 and DIO29 are INPUT)  analogRead(ADC4)*(<referance>/1024.0)*(115.8/15.8)
+// 24V boot set (DIO28 is INPUT, DIO29 is OUTPUT LOW)  analogRead(ADC4)*(<referance>/1024.0)*(105.506/5.506)
 #define ADC4 4
+#define DIO28 28
 
-// ADC5 has a Plugable input with a 20mA current source
-// its voltage is analogRead(ADC5)*(5.0/1024.0)
-#define ADC5 5
+// ADC5/DIO29 is used to select SMPS boost voltage
+// the ADC channel can be used with analogRead(ADC5)*(5.0/1024.0) to read the feedback voltage
+// 9V boot set (DIO28 and DIO29 are INPUT)  analogRead(ADC5)*(<referance>/1024.0)*(115.8/15.8)
+// 12V boot set (DIO28 is OUTPUT LOW, DIO29 is INPUT)  analogRead(ADC5)*(<referance>/1024.0)*(111.57/11.57)
+#define ADC4 4
+#define DIO29 29
 
-// PV_IN_ADC6 voltage is analogRead(PV_V)*(5.0/1024.0)*(532.0/100.0)
-#define PV_V 6 
+// ADC6 voltage is analogRead(PWR_I)*(<referance>/1024.0)/(0.068*50.0)
+#define PWR_I 6 
 
-// PWR_ADC7 or Battery voltage is analogRead(PWR_V)*(5.0/1024.0)*(3.0/2.0)
+// ADC7 or input voltage is analogRead(PWR_V)*(<referance>/1024.0)*(115.8/15.8)
 #define PWR_V 7
+
+// DIO30 and DIO31 should not be used 
 
 #endif // Pins_Board_h

@@ -1,5 +1,5 @@
-/* ATmega1284 DigitalIO Library
- * Copyright (C) 2016 Ronald Sutherland
+/* Irrigate7 (Atmega1284p) DigitalIO Library
+ * Copyright (C) 2018 Ronald Sutherland
  *
  * This Library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,48 +53,52 @@ Wiring (e.g. Arduino) uses pin numbers to control their functions.
 This is wasteful, but teaching "DDRB |= _BV(PB5)" to set an LED pin as an output is not going to do.
 Make no mistake this is for the kids, but is also is for fun :-) */
 static const Pin_Map pinMap[NUM_DIGITAL_PINS] = {
-    [24] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA0 }, // [ADC0]
-    [25] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA1 }, // [ADC1]
-    [26] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA2 }, // [ADC2]
-    [27] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA3 }, // [ADC3]
-    [28] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA4 }, // [ADC4]
-    [29] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA5 }, // [ADC5]
-    [30] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA6 }, // [PWR_I]
-    [31] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA7 }, // [PWR_V]
-    [4] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB0 }, // [IO4]
-    [23] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB1 }, // T1 [IO23]
-    [22] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB2 }, // INT2 [IO22]
-    [6] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB3 }, // OC0A [IO6]
-    [5] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB4 }, // OC0B/nSS [IO5]
-    [14] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB5 }, // ICP3/MOSI [IO14]
-    [12] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB6 }, // OC3A/MISO [IO12]
-    [13] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB7 }, // OC3B/SCK [IO13]
-    [21] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC0 }, // SCL [IO21]
-    [20] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC1 }, // SDA [IO20]
-    [19] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC2 }, // TCK [IO19]
-    [18] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC3 }, // TMS [IO18]
-    [17] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC4 }, // TDO [IO17]
-    [16] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC5 }, // TDI [IO16]
-    [15] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC6 }, // [IO15]
-    [7] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC7 }, // [IO7]
-    [0] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD0 }, // RX0 [IO0]
-    [1] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD1 }, // TX0 [IO1]
-    [2] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD2 }, // RX1/INT0 [IO2]
-    [3] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD3 }, // TX0/INT1 [IO3]
-    [10] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD4 }, // OC1B [IO10]
-    [9] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD5 }, // OC1A [IO9]
-    [8] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD6 }, // ICP1 [IO8]
-    [11] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD7 } // OC2A [IO11]
+    [0] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD0 }, // RX0
+    [1] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD1 }, // TX0
+    [2] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD2 }, // RX1
+    [3] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD3 }, // TX1
+    [4] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB0 }, // CS0_EN
+    [5] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD4 }, // CS1_EN
+    [6] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB3 }, // CS2_EN
+    [7] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC7 }, // CS3_EN
+    [8] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD6 }, // ICP1
+    [9] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD5 }, // CS_ICP1_EN
+    [10] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB4 }, // nSS
+    [11] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB5 }, // MOSI
+    [12] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB6 }, // MISO
+    [13] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB7 }, // SCK
+    [14] = { .ddr=&DDRD, .pin=&PIND, .port=&PORTD, .bit= PD7 }, // ALT_EN
+    [15] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC6 }, // K3_E3, K7_NE2
+    [16] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC5 }, // K3_NE2, K7_E3
+    [17] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC4 }, // K_A2
+    [18] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC3 }, // K_A1
+    [19] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC2 }, // K_A0
+    [20] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC1 }, // SDA
+    [21] = { .ddr=&DDRC, .pin=&PINC, .port=&PORTC, .bit= PC0 }, // SCL
+    [22] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB2 }, // SHLD_VIN_EN
+    [23] = { .ddr=&DDRB, .pin=&PINB, .port=&PORTB, .bit= PB1 }, // K3_NE1, K7_NE1
+    [24] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA0 }, // DIO24
+    [25] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA1 }, // DIO25
+    [26] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA2 }, // DIO26
+    [27] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA3 }, // DIO27
+    [28] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA4 }, // DIO28
+    [29] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA5 }, // DIO29
+    [30] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA6 }, // DIO30 
+    [31] = { .ddr=&DDRA, .pin=&PINA, .port=&PORTA, .bit= PA7 } // DIO31
 };
-#else
-    #error Pin Map for MCU not available
 #endif 
 
-void badPinNumber(void) __attribute__((error("Pin number is too large or not a constant")));
-
-static inline __attribute__((always_inline)) void badPinCheck(uint8_t pin) 
+// note: the use of dead code elimination is not standard C. 
+static inline __attribute__((always_inline)) uint8_t badPin(uint8_t pin) 
 {
-    if (pin >= NUM_DIGITAL_PINS) badPinNumber();
+    if (pin >= NUM_DIGITAL_PINS) 
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 static inline __attribute__((always_inline))
@@ -119,33 +123,39 @@ void bitWrite(volatile uint8_t* register_addr, uint8_t bit_offset, bool value_fo
 static inline __attribute__((always_inline))
 bool digitalRead(uint8_t pin_num) 
 {
-    badPinCheck(pin_num);
-    return (*pinMap[pin_num].pin >> pinMap[pin_num].bit) & 1;
+    if (!badPin(pin_num)) 
+    {
+        return (*pinMap[pin_num].pin >> pinMap[pin_num].bit) & 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
-/* set pin value LOW and HIGH */
+/* set pin value HIGH and LOW */
 static inline __attribute__((always_inline))
 void digitalWrite(uint8_t pin_num, bool value_for_bit) {
-  badPinCheck(pin_num);
-  bitWrite(pinMap[pin_num].port, pinMap[pin_num].bit, value_for_bit);
+    if (!badPin(pin_num)) bitWrite(pinMap[pin_num].port, pinMap[pin_num].bit, value_for_bit);
 }
 
-/* toggle pin*/
+/* toggle pin number  */
 static inline __attribute__((always_inline))
-void digitalToggle(uint8_t pin) {
-    badPinCheck(pin);
-    // Ckeck if pin is in OUTPUT mode befor changing it
-    if( ( ( (*pinMap[pin].ddr) >> pinMap[pin].bit ) & 1) == OUTPUT )  
+void digitalToggle(uint8_t pin_num) {
+    if (!badPin(pin_num)) 
     {
-        digitalWrite(pin, !digitalRead(pin));
+        // Ckeck if pin is in OUTPUT mode befor changing it
+        if( ( ( (*pinMap[pin_num].ddr) >> pinMap[pin_num].bit ) & 1) == OUTPUT )  
+        {
+            digitalWrite(pin_num, !digitalRead(pin_num));
+        }
     }
 }
 
 /* set pin mode INPUT and OUTPUT */
 static inline __attribute__((always_inline))
 void pinMode(uint8_t pin_num, bool output_mode) {
-  badPinCheck(pin_num);
-  bitWrite(pinMap[pin_num].ddr, pinMap[pin_num].bit, output_mode);
+    if (!badPin(pin_num)) bitWrite(pinMap[pin_num].ddr, pinMap[pin_num].bit, output_mode);
 }
 
 #endif  // DigitalPin_h

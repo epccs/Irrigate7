@@ -31,8 +31,28 @@ static volatile uint8_t twi_slarw;
 static volatile uint8_t twi_sendStop;			// should the transaction end with a stop
 static volatile uint8_t twi_inRepStart;			// in the middle of a repeated start
 
-static void (*twi_onSlaveTransmit)(void);
-static void (*twi_onSlaveReceive)(uint8_t*, int);
+// used to initalize the Transmit functions in case they are not used.
+void transmit_default(void)
+{
+    return;
+}
+
+typedef void (*PointerToTransmit)(void);
+
+// used to initalize the Receive functions in case they are not used.
+void receive_default(uint8_t *rxBuffer, int rxBufferIndex)
+{
+    // ignore the received data
+    // the receive event happens once after an I2C stop or repeated-start
+    // that will need the slave to have data ready to transmit
+    // repeated-start is usd for atomic operation e.g. prevents others from using bus 
+    return;
+}
+
+typedef void (*PointerToReceive)(uint8_t*, int);
+
+static PointerToTransmit twi_onSlaveTransmit = transmit_default;
+static PointerToReceive twi_onSlaveReceive = receive_default;
 
 static uint8_t twi_masterBuffer[TWI_BUFFER_LENGTH];
 static volatile uint8_t twi_masterBufferIndex;
@@ -116,11 +136,8 @@ void twi_disable(void)
     PORTC &= ~(1 << PORTC5); 
 #elif defined(__AVR_ATmega164P__) || defined(__AVR_ATmega324P__) \
     || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__)
-    // ? what does digitalWrite(SDA, 0) function call do on an m1284p
-    PORTC &= ~(1 << PORTC1);  // clear the port bit to disable the pull-up
-
-    // ? what does digitalWrite(SCL, 0) function call do on an m1284p
-    PORTC &= ~(1 << PORTC0); 
+    PORTC &= ~(1 << PORTC1);  // deactivate SDA pull-up
+    PORTC &= ~(1 << PORTC0);  // deactivate SCL  pull-up
 #else
 #error "no I2C definition for MCU available"
 #endif

@@ -103,7 +103,7 @@
 // the ADC channel can be used with analogRead(ADC5)*(5.0/1024.0) to read the feedback voltage
 // 9V boot set (DIO28 and DIO29 are INPUT)  analogRead(ADC5)*(<referance>/1024.0)*(115.8/15.8)
 // 12V boot set (DIO28 is OUTPUT LOW, DIO29 is INPUT)  analogRead(ADC5)*(<referance>/1024.0)*(111.57/11.57)
-#define ADC4 4
+#define ADC5 5
 #define DIO29 29
 
 // ADC6 voltage is analogRead(PWR_I)*(<referance>/1024.0)/(0.068*50.0)

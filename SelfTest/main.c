@@ -1,6 +1,6 @@
 /* 
-Irrigate7 SelfTest
-Copyright (C) 2017 Ronald Sutherland
+Irrigate7 ^5 SelfTest
+Copyright (C) 2018 Ronald Sutherland
 
 This Library is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

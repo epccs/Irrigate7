@@ -65,8 +65,7 @@
 #define SHLD_VIN_EN 22
 
 //K3/K7 Interface+
-#define K3_NE1 23
-#define K7_NE1 23
+#define K_NE1 23
 
 // MIX IO has an ADC channel and DIO on each pin
 // There are values from 0 to 1023 for 1024 slots where each reperesents 1/1024 of the reference. Last slot has issues

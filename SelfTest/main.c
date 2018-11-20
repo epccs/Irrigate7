@@ -77,8 +77,8 @@ void setup(void)
     digitalWrite(K3_E3,LOW);
     pinMode(K7_E3,OUTPUT);
     digitalWrite(K7_E3,LOW);
-    pinMode(K3_NE1,OUTPUT);
-    digitalWrite(K3_NE1,LOW);
+    pinMode(K_NE1,OUTPUT);
+    digitalWrite(K_NE1,LOW);
 
     // Initialize Timers, ADC, and clear bootloader, Arduino does these with init() in wiring.c
     initTimers(); //Timer0 Fast PWM mode, Timer1 & Timer2 Phase Correct PWM mode.
@@ -149,10 +149,27 @@ void test(void)
         return;
     }
 
+    // R1 should have 22mA in it from fixed current sourse next to RX1
+    float adc0_cs_next_to_rx1_v = analogRead(ADC0)*((ref_extern_avcc_uV/1.0E6)/1024.0);
+    float adc0_cs_next_to_rx1_i = adc0_cs_next_to_rx1_v / R1;
+    printf_P(PSTR("CS next to RX1 on R1: %1.3f A\r\n"), adc0_cs_next_to_rx1_i);
+    if (adc0_cs_next_to_rx1_i < 0.018) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> CS next to RX1 is to low.\r\n"));
+        return;
+    }
+    if (adc0_cs_next_to_rx1_i > 0.026) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> CS next to RX1 is to high.\r\n"));
+        return;
+    }
+
     //all current sources off
     if (analogRead(ADC0))
     {
-        printf_P(PSTR("Open 22mA current source next to RX1\r\n"));
+        printf_P(PSTR("   Now open current source next to RX1\r\n"));
         while (analogRead(ADC0))
         {
             _delay_ms(100) ;
@@ -411,9 +428,9 @@ void test(void)
     digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
     digitalWrite(K_A1,LOW);
     digitalWrite(K_A2,LOW);
-    digitalWrite(K3_NE1,LOW);
     digitalWrite(K3_NE2,LOW);
-    digitalWrite(K3_E3,HIGH); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
     _delay_ms(10) ; // busy-wait delay
     float adc5_boost9v_at_10msec_v = analogRead(ADC5)*((ref_extern_avcc_uV/1.0E6)/1024.0)*(115.8/15.8);
     printf_P(PSTR("BOOST9V@10mSec: %1.3f V\r\n"), adc5_boost9v_at_10msec_v);
@@ -430,17 +447,17 @@ void test(void)
         passing = 0; 
         printf_P(PSTR(">>> BOOST9V is high.\r\n"));
     }
-    digitalWrite(K3_E3,LOW); //turn off the boost supply 
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
 
-    // discharge the boost charge
+    // discharge the boost charge with K1 SET 
     digitalWrite(K_A0,LOW); //74HC238 address to select Y2
     digitalWrite(K_A1,HIGH);
     digitalWrite(K_A2,LOW);
-    digitalWrite(K3_NE1,LOW);
     digitalWrite(K3_NE2,LOW);
-    digitalWrite(K3_E3,HIGH); // this is when K1 SET pulse is sent that should dischage the boost charge
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K1 SET pulse is sent that should dischage the boost charge
     _delay_ms(1000) ; // busy-wait delay
-    digitalWrite(K3_E3,LOW);
+    digitalWrite(K_NE1,HIGH);
 
     // Set boost suppy for 12V and turn it on
     pinMode(DIO28,OUTPUT); // 43.2k is now in parallel with 15.8k for the boost feedback voltage divider
@@ -450,12 +467,17 @@ void test(void)
     digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
     digitalWrite(K_A1,LOW);
     digitalWrite(K_A2,LOW);
-    digitalWrite(K3_NE1,LOW);
     digitalWrite(K3_NE2,LOW);
-    digitalWrite(K3_E3,HIGH); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
     _delay_ms(10) ; // busy-wait delay
     float adc5_boost12v_at_10msec_v = analogRead(ADC5)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*43.2)/(15.8+43.2) ))/( (15.8*43.2)/(15.8+43.2) ) );
-    printf_P(PSTR("BOOST12V@10mSec: %1.3f V\r\n"), adc5_boost12v_at_10msec_v);
+    printf_P(PSTR("BOOST12V@10mSec after K1 SET discharge: %1.3f V\r\n"), adc5_boost12v_at_10msec_v);
+    if (adc5_boost12v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K1 SET did not take boost charge.\r\n"));
+    }
     _delay_ms(1990) ; // busy-wait delay
     float adc5_boost12v_at_2000msec_v = analogRead(ADC5)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*43.2)/(15.8+43.2) ))/( (15.8*43.2)/(15.8+43.2) ) );
     printf_P(PSTR("BOOST12V@2000mSec: %1.3f V\r\n"), adc5_boost12v_at_2000msec_v);
@@ -469,17 +491,17 @@ void test(void)
         passing = 0; 
         printf_P(PSTR(">>> BOOST12V is high.\r\n"));
     }
-    digitalWrite(K3_E3,LOW); //turn off the boost supply 
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
 
     // discharge the boost charge
-    digitalWrite(K_A0,LOW); //74HC238 address to select Y2
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y3
     digitalWrite(K_A1,HIGH);
     digitalWrite(K_A2,LOW);
-    digitalWrite(K3_NE1,LOW);
     digitalWrite(K3_NE2,LOW);
-    digitalWrite(K3_E3,HIGH); // this is when K1 SET pulse is sent that should dischage the boost charge
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K1 RESET pulse is sent that should dischage the boost charge
     _delay_ms(1000) ; // busy-wait delay
-    digitalWrite(K3_E3,LOW);
+    digitalWrite(K_NE1,HIGH);
 
     // Set boost suppy for 24V and turn it on
     pinMode(DIO28,INPUT);
@@ -489,12 +511,17 @@ void test(void)
     digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
     digitalWrite(K_A1,LOW);
     digitalWrite(K_A2,LOW);
-    digitalWrite(K3_NE1,LOW);
     digitalWrite(K3_NE2,LOW);
-    digitalWrite(K3_E3,HIGH); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
     _delay_ms(10) ; // busy-wait delay
     float adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
-    printf_P(PSTR("BOOST24V@10mSec: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    printf_P(PSTR("BOOST24V@10mSec after K1 RESET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K1 RESET did not take boost charge.\r\n"));
+    }
     _delay_ms(1990) ; // busy-wait delay
     float adc4_boost24v_at_2000msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
     printf_P(PSTR("BOOST24V@2000mSec: %1.3f V\r\n"), adc4_boost24v_at_2000msec_v);
@@ -508,17 +535,354 @@ void test(void)
         passing = 0; 
         printf_P(PSTR(">>> BOOST24V is high.\r\n"));
     }
-    digitalWrite(K3_E3,LOW); //turn off the boost supply 
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge
+    digitalWrite(K_A0,LOW); //74HC238 address to select Y4
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,HIGH);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K2 SET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K2 SET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K2 SET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y5
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,HIGH);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K2 RESET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K2 RESET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K2 RESET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge
+    digitalWrite(K_A0,LOW); //74HC238 address to select Y6
+    digitalWrite(K_A1,HIGH);
+    digitalWrite(K_A2,HIGH);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K3 SET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K3 SET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K3 SET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y7
+    digitalWrite(K_A1,HIGH);
+    digitalWrite(K_A2,HIGH);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K3 RESET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K3 RESET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K3 RESET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge
+    digitalWrite(K_A0,LOW); //74HC238 address to select Y0
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K7_NE2,LOW);
+    digitalWrite(K7_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K4 SET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K4 SET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K4 SET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K7_NE2,LOW);
+    digitalWrite(K7_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K4 RESET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K4 RESET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K4 RESET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
 
     // discharge the boost charge
     digitalWrite(K_A0,LOW); //74HC238 address to select Y2
     digitalWrite(K_A1,HIGH);
     digitalWrite(K_A2,LOW);
-    digitalWrite(K3_NE1,LOW);
-    digitalWrite(K3_NE2,LOW);
-    digitalWrite(K3_E3,HIGH); // this is when K1 SET pulse is sent that should dischage the boost charge
+    digitalWrite(K7_NE2,LOW);
+    digitalWrite(K7_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K5 SET pulse is sent that should dischage the boost charge
     _delay_ms(1000) ; // busy-wait delay
-    digitalWrite(K3_E3,LOW);
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K5 SET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K5 SET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y3
+    digitalWrite(K_A1,HIGH);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K7_NE2,LOW);
+    digitalWrite(K7_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K5 RESET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K5 RESET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K5 RESET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge
+    digitalWrite(K_A0,LOW); //74HC238 address to select Y4
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,HIGH);
+    digitalWrite(K7_NE2,LOW);
+    digitalWrite(K7_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K6 SET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K6 SET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K6 SET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y5
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,HIGH);
+    digitalWrite(K7_NE2,LOW);
+    digitalWrite(K7_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K6 RESET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K6 RESET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K6 RESET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge
+    digitalWrite(K_A0,LOW); //74HC238 address to select Y6
+    digitalWrite(K_A1,HIGH);
+    digitalWrite(K_A2,HIGH);
+    digitalWrite(K7_NE2,LOW);
+    digitalWrite(K7_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K7 SET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K7 SET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K7 SET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y7
+    digitalWrite(K_A1,HIGH);
+    digitalWrite(K_A2,HIGH);
+    digitalWrite(K7_NE2,LOW);
+    digitalWrite(K7_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K7 RESET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+
+    // boost suppy to 24V again
+    digitalWrite(K_A0,HIGH); //74HC238 address to select Y1
+    digitalWrite(K_A1,LOW);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when the SMPS shutdown hack is removed, also ADC5 can do a reading at this time.
+    _delay_ms(10) ; // busy-wait delay
+    adc4_boost24v_at_10msec_v = analogRead(ADC4)*((ref_extern_avcc_uV/1.0E6)/1024.0)*( (100.0+( (15.8*8.45)/(15.8+8.45) ))/( (15.8*8.45)/(15.8+8.45) ) );
+    printf_P(PSTR("BOOST24V@10mSec after K7 RESET discharge: %1.3f V\r\n"), adc4_boost24v_at_10msec_v);
+    if (adc4_boost24v_at_10msec_v > 6.0) 
+    { 
+        passing = 0; 
+        printf_P(PSTR(">>> K7 RESET did not take boost charge.\r\n"));
+    }
+    _delay_ms(990) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH); //turn off the boost supply 
+
+    // discharge the boost charge with K1 SET 
+    digitalWrite(K_A0,LOW); //74HC238 address to select Y2
+    digitalWrite(K_A1,HIGH);
+    digitalWrite(K_A2,LOW);
+    digitalWrite(K3_NE2,LOW);
+    digitalWrite(K3_E3,HIGH);
+    digitalWrite(K_NE1,LOW); // this is when K1 SET pulse is sent that should dischage the boost charge
+    _delay_ms(1000) ; // busy-wait delay
+    digitalWrite(K_NE1,HIGH);
+    digitalWrite(K3_E3,LOW); // turn off boost current test (and its LED)
 
     // final test status
     if (passing)

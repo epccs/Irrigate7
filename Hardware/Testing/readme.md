@@ -171,7 +171,7 @@ Measure the +5V supply at J7 pin 6 and pin 5.
 { "+5V":[4.9959,4.9612,] }
 ```
 
-Edit the SelfTest main.c such that "#define REF_EXTERN_AVCC 4995900UL" has the correct value for the UUT. Next, run the bootload rule in the Makefile to upload the self-test firmware to the UUT that the remote shield is mounted on.
+Edit the SelfTest main.c such that "#define REF_EXTERN_AVCC 4999700UL" has the correct value for the UUT. Next, run the bootload rule in the Makefile to build and upload the self-test firmware to the UUT.
 
 ```
 cd ~Irrigate7/SelfTest
@@ -185,99 +185,56 @@ Use picocom to see the SelfTest results over its UART interface.
 
 
 ```
-rsutherland@conversion:~/Irrigate7/SelfTest$ picocom -b 38400 /dev/ttyUSB0
-picocom v1.7
-
-port is        : /dev/ttyUSB0
-flowcontrol    : none
-baudrate is    : 38400
-parity is      : none
-databits are   : 8
-escape is      : C-a
-local echo is  : no
-noinit is      : no
-noreset is     : no
-nolock is      : no
-send_cmd is    : sz -vv
-receive_cmd is : rz -vv
-imap is        : 
-omap is        : 
-emap is        : crcrlf,delbs,
-
+picocom -b 38400 /dev/ttyUSB0
+...
 Terminal ready
-Irrigate7 DIO and ADC Self Test date: Jun 25 2017
-I2C provided address 0x31 from RPU bus manager
-+5V needs measured and then set as REF_EXTERN_AVCC: 4.996 V
-Charging with CURR_SOUR_EN==low: 0.040 A
-PWR (Battery) at: 13.275 V
-MPPT at: 16.897 V
-ADC0 at: 0.000 V
-ADC1 at: 0.000 V
-ADC4 at: 0.000 V
-ADC5 at: 0.000 V
-ICP1 /w 0mA on plug termination reads: 1
-ICP3 /w 0mA on plug termination reads: 1
-CC_nFAULT measured with a weak pull-up: 1
-22MA@DIO10 curr source on R1: 0.021 A
-22MA@DIO2 curr source on R2: 0.021 A
-Dischrg with CURR_SOUR_EN==high: 0.046 A
-Chrg delta with CURR_SOUR_EN==high: 0.086 A
-22MA@ADC0 on R1: 0.022 A
-22MA@ADC5 on R2: 0.022 A
-10MA@ICP1 with ICP1 PL input: 0.010 A
-ICP1 /w 10mA on plug termination reads: 0
-10MA@ICP3 with ICP3 PL input: 0.010 A
-ICP3 /w 10mA on plug termination reads: 0
-Dischrging with CC_SHUTDOWN==high : 0.141 A
-PV open circuit (LT3652 off) at: 20.972 V
-22mA@ADC0 and 22mA@ADC1 on R1: 0.044 A
-22MA@DIO10, 22mA@ADC0, 22mA@ADC1 on R1: 0.065 A
-22mA@ADC4 and 22mA@ADC5 on R2: 0.043 A
-22MA@DIO2, 22mA@ADC4, 22mA@ADC5 on R2: 0.065 A
-ICP1 10mA + 17mA curr source on ICP1_TERM: 0.028 A
-ICP1 10mA with DIO4 sinking 17mA: 0.010 A
-ICP1 10mA with DIO3 sinking 17mA: 0.010 A
-ICP3 10mA + 17mA curr source on ICP3_TERM: 0.028 A
-ICP1 10mA with DIO4 sinking 17mA: 0.010 A
-Dischrg /w CC_SHUTDOWN, !K3_E3, !CURR_SOUR_EN: 0.046 A
-Dischrg@100mSec /w CC_SHUTDOWN, K3_E3, !CURR_SOUR_EN: 0.050 A
-Dischrg@300mSec /w CC_SHUTDOWN==high, K3_E3==hight: 0.118 A
-Dischrg@500mSec /w CC_SHUTDOWN==high, K3_E3==hight: 0.123 A
-Dischrg@2000mSec /w CC_SHUTDOWN==high, K3_E3==hight: 0.069 A
-BOOST@2000mSec: 24.110 V
-To disconnect battery turn off the PV supply and LED should stop blinking
+Irrigate7 Self Test date: Nov 19 2018
+avr-gcc --version: 5.4.0
+I2C provided address 0x31 from RPUadpt serial bus manager
+adc reading for PWR_V: 356
+PWR at: 12.739 V
+CS next to RX1 on R1: 0.022 A
+   Now open current source next to RX1
+ADC0 R1 /W all CS off: 0.000 V
+ADC1 at ICP1 with CS_ICP1_EN off: 0.000 V
+ADC2 on green LED floating: 1.523 V
+ADC3 on yellow LED with TX1 sinking and CS2_EN off: 0.000 V
+ICP1 input should be HIGH with 0mA loop current: 1 
+CS0 on R1: 0.022 A
+CS1 source on R1: 0.022 A
+   ADC0 reading used to calculate ref_intern_1v1_uV: 708 of 1023
+   calculated ref_intern_1v1_uV: 1066320 uV
+REF_EXTERN_AVCC old value found in eeprom: 4999700 uV
+REF_INTERN_1V1 old value found in eeprom: 1069341 uV
+REF_EXTERN_AVCC from eeprom is same
+PWR_I at no load use INTERNAL_1V1: 0.018 A
+CS2 source on R1: 0.022 A
+Yellow LED D4 fwd /w CS2 V: 2.021 V
+TX1 shunting CS2: 0.015 A
+CS3 source on R1: 0.022 A
+RX1 shunting CS3: 0.015 A
+CS_ICP1 in ICP1 input: 0.019 A
+Green LED D1 fwd /w CS_ICP1 V: 2.773 V
+ICP1 /w 17mA on termination reads: 0 
+Boost feedback /w shutdown/hack ON from ADC5 V: 3.042 V
+BOOST9V@10mSec: 4.616 V
+BOOST9V@2000mSec: 9.125 V
+BOOST12V@10mSec after K1 SET discharge: 4.944 V
+BOOST12V@2000mSec: 12.007 V
+BOOST24V@10mSec after K1 RESET discharge: 4.865 V
+BOOST24V@2000mSec: 23.859 V
+BOOST24V@10mSec after K2 SET discharge: 4.865 V
+BOOST24V@10mSec after K2 RESET discharge: 4.772 V
+BOOST24V@10mSec after K3 SET discharge: 4.959 V
+BOOST24V@10mSec after K3 RESET discharge: 4.678 V
+BOOST24V@10mSec after K4 SET discharge: 4.865 V
+BOOST24V@10mSec after K4 RESET discharge: 4.772 V
+BOOST24V@10mSec after K5 SET discharge: 4.865 V
+BOOST24V@10mSec after K5 RESET discharge: 4.772 V
+BOOST24V@10mSec after K6 SET discharge: 4.772 V
+BOOST24V@10mSec after K6 RESET discharge: 4.865 V
+BOOST24V@10mSec after K7 SET discharge: 4.959 V
+BOOST24V@10mSec after K7 RESET discharge: 4.959 V
 [PASS]
 ```
 
-Before truning off the PV power check that the VIN pin on the shield has no power, the test turns it off. Then turn off the power supply and verify battery was disconnected.
-
-Run the SelfTest for each of the three voltage settings and measure the value with a DMM.
-
-```
-{ "9VBOOSTLD_V":[9.2,9.1,],
-"12VBOOST_V":[12.2,12.1,],
-"24VBOOST_V":[24.1,24.1,]}
-```
-
-## Solenoid Test
-
-Items.
-
-![Irrigate7 Solenoid Test Items](./14320,SolenoidTest.jpg "Irrigate7 Solenoid Test Items")
-
-Connect the [Solenoid Test Harness] to the UUT. Connect 100 kOhm resistor to both the PV side and BAT side thermistor inputs to simulate room temperature. Connect a 12V SLA battery to the +BAT and -BAT. Connect +PV and -PV to a CC/CV mode supply with CC set at 150mA and  CV set at 0V. Apply power and increase the CV setting to 21V.
-
-[Solenoid Test Harness]: https://raw.githubusercontent.com/epccs/RPUno/master/SelfTest/Setup/SelfTestWiring.png
-
-
-```
-cd ~Irrigate7/Solenoid
-make bootload
-```
-
-Use picocom to see the Solenoid initialization on the [Solenoid Test Harness] LED's
-
-```
-rsutherland@conversion:~/Irrigate7/Solenoid$ picocom -b 38400 /dev/ttyUSB0
-picocom v1.7
-```

@@ -278,6 +278,8 @@ unsigned long is_arg_in_ul_range (uint8_t arg_num, unsigned long min, unsigned l
     return ul;
 }
 
+// return argument if in range
+// don't use this to test ranges that include zero
 uint8_t is_arg_in_uint8_range (uint8_t arg_num, uint8_t min, uint8_t max)
 {
     // check that arg[arg_num] is a digit 

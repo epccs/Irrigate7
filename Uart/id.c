@@ -63,12 +63,12 @@ void Id(char name[])
     }
     else if ( command_done == 12 )
     {
-        printf_P(PSTR("\"desc\":\"Irrigate7 Board /w " ));
+        printf_P(PSTR("\"desc\":\"Irrigate7 (14320^5) " ));
         command_done = 13;
     }
     else if ( command_done == 13 )
     {
-        printf_P(PSTR("atmega1284p and LT3652\""));
+        printf_P(PSTR("Board /w atmega1284p\""));
         if (arg_count == 1) 
         { 
             command_done = 15; 
@@ -81,7 +81,7 @@ void Id(char name[])
     }
     else if ( command_done == 14 )
     {
-        printf_P(PSTR("\"avr-gcc\":\"%d.%d\""),__GNUC__,__GNUC_MINOR__);
+        printf_P(PSTR("\"avr-gcc\":\"%s\""),__VERSION__);
         command_done = 15; 
     }
     else if ( command_done == 15 )

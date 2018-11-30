@@ -27,8 +27,11 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "../lib/pin_num.h"
 #include "../lib/pins_board.h"
 #include "../Uart/id.h"
-#include "pwm.h"
+#include "toggleicp.h"
 #include "capture.h"
+
+// pins are in ../lib/pins_board.h
+#define STATUS_LED TX1
 
 #define BLINK_DELAY 1000UL
 static unsigned long blink_started_at;
@@ -41,9 +44,9 @@ void ProcessCmd()
     {
         Id("Capture");
     }
-    if ( (strcmp_P( command, PSTR("/pwm")) == 0) )
+    if ( (strcmp_P( command, PSTR("/toggleicp")) == 0) )
     {
-        Pwm();
+        ToggleICP();
     }
     if ( (strcmp_P( command, PSTR("/count?")) == 0) &&  ( (arg_count == 0) || ( (arg_count == 1) && (strcmp_P( arg[0], PSTR("icp1")) == 0) ) ) )
     {
@@ -65,9 +68,8 @@ void ProcessCmd()
 
 void setup(void) 
 {
-	// RPUuno has no LED, but LED_BUILTIN is defined as pin 13 anyway.
-    pinMode(LED_BUILTIN,OUTPUT);
-    digitalWrite(LED_BUILTIN,HIGH);
+    pinMode(STATUS_LED,OUTPUT);
+    digitalWrite(STATUS_LED,HIGH);
     
     // Initialize Timers, ADC, and clear bootloader, Arduino does these with init() in wiring.c
     initTimers(); //Timer0 Fast PWM mode, Timer1 & Timer2 Phase Correct PWM mode.
@@ -107,7 +109,7 @@ void blink(void)
     unsigned long kRuntime = millis() - blink_started_at;
     if ( kRuntime > blink_delay)
     {
-        digitalToggle(LED_BUILTIN);
+        digitalToggle(STATUS_LED);
         
         // next toggle 
         blink_started_at += blink_delay; 

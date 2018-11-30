@@ -31,7 +31,7 @@ The internal 1V1 bandgap is not trimmed by the manufacturer, so it is nearly use
 
 # Firmware Upload
 
-With a serial port connection (set the BOOT_PORT in Makefile) and xboot installed on the Irrigate7 run 'make bootload' and it should compile and then flash the MCU.
+With a serial port connection (see BOOTLOAD_PORT in Makefile) and xboot installed on the Irrigate7 run 'make bootload' and it should compile and then flash the MCU.
 
 ```
 git clone https://github.com/epccs/Irrigate7/

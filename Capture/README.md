@@ -2,33 +2,36 @@
 
 ## Overview
 
-Timer 1 Input Capture (ICP1) is on Irrigate7 Digital (Wiring) pin 8. 
+Timer 1 Input Capture (ICP1) is on Irrigate7 Digital I/O 8. 
 
-Referance ATmega328 datasheet 16.6 Input Capture Unit (page 118). A capture copies the value in timer TCNT1 into ICR1, which is a timestamp of the event.
+Referance datasheet Input Capture Unit. A capture copies the value in timer TCNT1 into ICR1, which is a timestamp of the event.
 
 Note the ISR needs about 300 machine cycles to finish. If events happen faster than 300 machine cycles, they may be skipped.
 
 ## Firmware Upload
 
-With a serial port connection (set the BOOT_PORT in Makefile) and optiboot installed on the Irrigate7 run 'make bootload' and it should compile and then flash the MCU.
+With a serial port connection (see BOOTLOAD_PORT in Makefile) and xboot installed on the Irrigate7 run 'make bootload' and it should compile and then flash the MCU.
 
-``` 
-rsutherland@conversion:~/Samba/Irrigate7/Capture$ make bootload
+```
+git clone https://github.com/epccs/Irrigate7/
+cd /Irrigate7/Capture
+make bootload
 ...
 avrdude done.  Thank you.
 ``` 
 
-Now connect with picocom (or ilk). Note I am often at another computer doing this through SSH. The Samba folder is for editing the files from Windows.
+Now connect with picocom (or ilk).
+
 
 ``` 
-#exit picocom with C-a, C-x
+#exit is C-a, C-x
 picocom -b 38400 /dev/ttyUSB0
 ``` 
 
 or log the terminal session
 
 ``` 
-script -f -c "picocom -b 38400 /dev/ttyUSB0" stuff,capture.log
+script -f -c "picocom -b 38400 /dev/ttyUSB0" stuff.log
 ``` 
 
 
@@ -42,17 +45,29 @@ identify
 
 ``` 
 /1/id?
-{"id":{"name":"Capture","desc":"Irrigate7 Board /w atmega1284p and LT3652","avr-gcc":"4.9"}}
+{"id":{"name":"Capture","desc":"Irrigate7 (14320^5) Board /w atmega1284p","avr-gcc":"5.4.0"}}
 ```
 
 ## /0/initICP icp1,mode,prescale
 
-Initialize Input Capture ICP1. Set the Input Capture Edge Select mode: rise, fall, both. Set the prescale: 0 = no clock, 1 = MCU clock, 2 = MCU clock/8, 3 = MCU clock/64, 4 = MCU clock/256, 5 = MCU clock/1024, 6 and 7 are for an external (IO5) clock source (see the datasheet). Note that IO5 is used for SHUTDOWN of the solar charge controler.
+Initialize Input Capture ICP1. Set the Input Capture Edge Select mode: rise, fall, both. Set the prescale: 0 = no clock, 1 = MCU clock, 2 = MCU clock/8, 3 = MCU clock/64, 4 = MCU clock/256, and 5 = MCU clock/1024.
 
 ``` 
 /1/initICP icp1,both,1
 {"icp1":{"edgSel":"both", "preScalr":"1"}}
 ```
+
+## /0/toggleicp icp1,0..255
+
+Toggle the CS_ICP1_EN a number of times to test the ICP1 input. The capture time stamps are the software loop times.
+
+``` 
+/1/toggleicp icp1,31
+{"icp1":{"toggle_CS_ICP1_EN":"31"}}
+``` 
+
+Note: CS_ICP1_EN starts with a LOW and ends with a LOW, so the count may be off by one.
+
 
 ## /0/count? [icp1]
 
@@ -60,20 +75,7 @@ Return count of ICP1 (ATmega328 pin PB0. Uno pin 8) event captures. A zero means
 
 ``` 
 /1/count? icp1
-{"icp1":{"count":"0"}}
-{"icp1":{"count":"0"}}
-{"icp1":{"count":"41"}}
-{"icp1":{"count":"41"}}
-{"icp1":{"count":"41"}}
-{"icp1":{"count":"41"}}
-{"icp1":{"count":"41"}}
-{"icp1":{"count":"839"}}
-{"icp1":{"count":"843"}}
-{"icp1":{"count":"843"}}
-{"icp1":{"count":"843"}}
-{"icp1":{"count":"2052"}}
-{"icp1":{"count":"2052"}}
-{"icp1":{"count":"2052"}}
+{"icp1":{"count":"31"}}
 ```
 
 ## /0/capture? [icp1,1..15] 
@@ -82,26 +84,16 @@ return ICP1 timer delta(s) as a pair of low and high timing values from the buff
 
 ``` 
 /1/capture? icp1,10
-{"icp1":{"count":"2052","low":"517","high":"10486","status":"0"}}
-{"icp1":{"count":"2050","low":"10575","high":"15829","status":"0"}}
-{"icp1":{"count":"2048","low":"38908","high":"65423","status":"0"}}
-{"icp1":{"count":"2046","low":"46217","high":"33219","status":"0"}}
-{"icp1":{"count":"2044","low":"12040","high":"14514","status":"0"}}
-{"icp1":{"count":"2042","low":"10893","high":"61232","status":"0"}}
-{"icp1":{"count":"2040","low":"7757","high":"56660","status":"0"}}
-{"icp1":{"count":"2038","low":"40104","high":"50118","status":"0"}}
-{"icp1":{"count":"2036","low":"6376","high":"50197","status":"0"}}
-{"icp1":{"count":"2034","low":"22773","high":"4255","status":"0"}}
-{"icp1":{"count":"2052","low":"517","high":"10486","status":"0"}}
-{"icp1":{"count":"2050","low":"10575","high":"15829","status":"0"}}
-{"icp1":{"count":"2048","low":"38908","high":"65423","status":"0"}}
-{"icp1":{"count":"2046","low":"46217","high":"33219","status":"0"}}
-{"icp1":{"count":"2044","low":"12040","high":"14514","status":"0"}}
-{"icp1":{"count":"2042","low":"10893","high":"61232","status":"0"}}
-{"icp1":{"count":"2040","low":"7757","high":"56660","status":"0"}}
-{"icp1":{"count":"2038","low":"40104","high":"50118","status":"0"}}
-{"icp1":{"count":"2036","low":"6376","high":"50197","status":"0"}}
-{"icp1":{"count":"2034","low":"22773","high":"4255","status":"0"}}
+{"icp1":{"count":"31","low":"693","high":"550","status":"1"}}
+{"icp1":{"count":"29","low":"865","high":"551","status":"1"}}
+{"icp1":{"count":"27","low":"698","high":"551","status":"1"}}
+{"icp1":{"count":"25","low":"698","high":"551","status":"1"}}
+{"icp1":{"count":"23","low":"698","high":"551","status":"1"}}
+{"icp1":{"count":"21","low":"698","high":"551","status":"1"}}
+{"icp1":{"count":"19","low":"698","high":"551","status":"1"}}
+{"icp1":{"count":"17","low":"698","high":"551","status":"1"}}
+{"icp1":{"count":"15","low":"698","high":"551","status":"1"}}
+{"icp1":{"count":"13","low":"698","high":"551","status":"1"}}
 ```
 
 It takes three events to aggregate the data for a capture report. The status reports only the most recent event status since the other two events can be inferred. 
@@ -112,43 +104,37 @@ return ICP1 event timer values as a 16 bit unsigned integer, which continuously 
 
 ``` 
 /1/event? icp1,21
-{"icp1":{"count":"2052","event":"42475","status":"0"}}
-{"icp1":{"count":"2051","event":"31989","status":"1"}}
-{"icp1":{"count":"2050","event":"31472","status":"0"}}
-{"icp1":{"count":"2049","event":"15643","status":"1"}}
-{"icp1":{"count":"2048","event":"5068","status":"0"}}
-{"icp1":{"count":"2047","event":"5181","status":"1"}}
-{"icp1":{"count":"2046","event":"31809","status":"0"}}
-{"icp1":{"count":"2045","event":"64126","status":"1"}}
-{"icp1":{"count":"2044","event":"17909","status":"0"}}
-{"icp1":{"count":"2043","event":"3395","status":"1"}}
-{"icp1":{"count":"2042","event":"56891","status":"0"}}
-{"icp1":{"count":"2041","event":"61195","status":"1"}}
-{"icp1":{"count":"2040","event":"50302","status":"0"}}
-{"icp1":{"count":"2039","event":"59178","status":"1"}}
-{"icp1":{"count":"2038","event":"51421","status":"0"}}
-{"icp1":{"count":"2037","event":"1303","status":"1"}}
-{"icp1":{"count":"2036","event":"26735","status":"0"}}
-{"icp1":{"count":"2035","event":"42074","status":"1"}}
-{"icp1":{"count":"2034","event":"35698","status":"0"}}
-{"icp1":{"count":"2033","event":"31443","status":"1"}}
-{"icp1":{"count":"2032","event":"8670","status":"0"}}
+{"icp1":{"count":"31","event":"1637","status":"1"}}
+{"icp1":{"count":"30","event":"944","status":"0"}}
+{"icp1":{"count":"29","event":"394","status":"1"}}
+{"icp1":{"count":"28","event":"65065","status":"0"}}
+{"icp1":{"count":"27","event":"64514","status":"1"}}
+{"icp1":{"count":"26","event":"63816","status":"0"}}
+{"icp1":{"count":"25","event":"63265","status":"1"}}
+{"icp1":{"count":"24","event":"62567","status":"0"}}
+{"icp1":{"count":"23","event":"62016","status":"1"}}
+{"icp1":{"count":"22","event":"61318","status":"0"}}
+{"icp1":{"count":"21","event":"60767","status":"1"}}
+{"icp1":{"count":"20","event":"60069","status":"0"}}
+{"icp1":{"count":"19","event":"59518","status":"1"}}
+{"icp1":{"count":"18","event":"58820","status":"0"}}
+{"icp1":{"count":"17","event":"58269","status":"1"}}
+{"icp1":{"count":"16","event":"57571","status":"0"}}
+{"icp1":{"count":"15","event":"57020","status":"1"}}
+{"icp1":{"count":"14","event":"56322","status":"0"}}
+{"icp1":{"count":"13","event":"55771","status":"1"}}
+{"icp1":{"count":"12","event":"55073","status":"0"}}
+{"icp1":{"count":"11","event":"54522","status":"1"}}
 ```
 
-## /0/pwm oc2a,0..255
-
-Pulse width modulation using OC2A (on PD7, which is mapped to Digital pin 11) can be used to pull down the 10mA current source that is enabled with a jumper on the ICP1 PL input. Note that timer2 is used when OC2A is set, and timer1 is used with ICP1 capture, also timer0 is used with the millis() function that is used to provide various timing. 
-
-``` 
-/1/pwm oc2a,127
-{"pwm":{"OCR2A":"127"}}
-``` 
 
 # Notes
 
 ## Pulse Skipping
 
-With an HT as the temperature goes up the high count goes down for example near Room temp I see 
+With an [HT] sensor as the temperature goes up the high count goes down for example near Room temp I see 
+
+[HT]: https://github.com/epccs/LoopSensor/tree/master/HT
 
 ``` 
 {"icp1":{"count":"519107161","low":"1669","high":"550","status":"0"}}

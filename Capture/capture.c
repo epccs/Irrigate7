@@ -68,7 +68,6 @@ void Count(void)
     }
     else
     {
-        printf_P(PSTR("{\"err\":\"CntCmdDoneWTF\"}\r\n"));
         initCommandBuffer();
     }
 }
@@ -201,7 +200,6 @@ void Capture(void)
     }
     else
     {
-        printf_P(PSTR("{\"err\":\"IcpCmdDoneWTF\"}\r\n"));
         initCommandBuffer();
     }
 }
@@ -298,7 +296,6 @@ void Event(void)
     }
     else
     {
-        printf_P(PSTR("{\"err\":\"IcpCmdDoneWTF\"}\r\n"));
         initCommandBuffer();
     }
 }
@@ -310,7 +307,7 @@ void InitICP(void)
         // call with arg[0] == icp1 and three arguments
         int prescale = atoi(arg[2]);
 
-        if ((prescale < 0) || (prescale > 0x7) )
+        if ((prescale < 0) || (prescale > 0x5) )
         {
             printf_P(PSTR("{\"err\":\"IcpPrescalBad\"}\r\n"));
             initCommandBuffer();

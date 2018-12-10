@@ -1,6 +1,6 @@
 /*
 toggleicp is part of Capture, it uses a command line arguemnt to Toggle the CS_ICP1_EN a number of times to test the ICP1 input
-Copyright (C) 2016 Ronald Sutherland
+Copyright (C) 2018 Ronald Sutherland
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License

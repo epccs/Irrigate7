@@ -71,7 +71,7 @@ Note: CS_ICP1_EN starts with a LOW and ends with a LOW, so the count may be off 
 
 ## /0/count? [icp1]
 
-Return count of ICP1 (ATmega328 pin PB0. Uno pin 8) event captures. A zero means icp1 captures are not happening.
+Return count of ICP1 (ATmega1284 pin PD6) event captures. A zero means icp1 captures are not happening.
 
 ``` 
 /1/count? icp1

@@ -26,13 +26,12 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "../lib/pins_board.h"
 #include "day_night.h"
 
-// RPUno has an input for 36 cell PV, which is also used to track the day and night
-// ADC channel 6 (PV_V) is converted to voltage with analogRead(PV_V)*(5.0/1024.0)*(532.0/100.0))
-// morning debouce starts when PV goes over 14V.  539 = 14 * (1024.0/5.0)*(100.0/532.0)
-#define MORNING_THRESHOLD 539
+// analog reading of 5*5.0/1024.0 is about 0.024V
+// analog reading of 10*5.0/1024.0 is about 0.049V
+#define MORNING_THRESHOLD 10
 #define STARTUP_DELAY 1000UL
-// evening debouce starts when PV drops bellow 10V  385 = 10 * (1024.0/5.0)*(100.0/532.0)
-#define EVENING_THRESHOLD 385
+#define EVENING_THRESHOLD 5
+// 900,000 millis is 15 min
 #define EVENING_DEBOUCE 900000UL
 #define MORNING_DEBOUCE 900000UL
 #define DAYNIGHT_TO_LONG 72000000UL
@@ -47,24 +46,30 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #   error ADC maxim size is 0x3FF 
 #endif
 
-#if MORNING_THRESHOLD - EVENING_THRESHOLD < 0x1F
-#   error ADC hysteresis of 32 should be allowed
+#if MORNING_THRESHOLD - EVENING_THRESHOLD < 0x04
+#   error ADC hysteresis of 4 should be allowed
 #endif
 
-#if MORNING_THRESHOLD < 0x1F4
-#   error minimum for morning threshold is 13V (0x1F4)  
-#endif
-
+int morning_threshold = MORNING_THRESHOLD;
+int evening_threshold = EVENING_THRESHOLD;
+unsigned long evening_debouce = (unsigned long)EVENING_DEBOUCE;
+unsigned long morning_debouce = (unsigned long)MORNING_DEBOUCE;
 uint8_t dayState = 0; 
 unsigned long dayTmrStarted;
-static void (*dayState_atDayWork)(void);
-static void (*dayState_atNightWork)(void);
 
-#define SERIAL_PRINT_DELAY_MILSEC 60000UL
+// used to initalize the PointerToWork functions in case they are not used.
+void callback_default(void)
+{
+    return;
+}
+
+typedef void (*PointerToWork)(void);
+static PointerToWork dayState_atDayWork = callback_default;
+static PointerToWork dayState_atNightWork = callback_default;
+
 static unsigned long serial_print_started_at;
 
-/* set function callback that provides the task to do at start of each day
- * Input    function: callback function to use
+/* register (i.e. save a referance to) a function callback that does somthing
  */
 void Day_AttachWork( void (*function)(void)  )
 {
@@ -76,7 +81,7 @@ void Night_AttachWork( void (*function)(void)  )
     dayState_atNightWork = function;
 }
 
-void Day(void)
+void Day(unsigned long serial_print_delay_milsec)
 {
     if ( (command_done == 10) )
     {
@@ -90,7 +95,7 @@ void Day(void)
 
         if (state == DAYNIGHT_START_STATE) 
         {
-            printf_P(PSTR("\"START\""));
+            printf_P(PSTR("\"STRT\""));
         }
 
         if (state == DAYNIGHT_DAY_STATE) 
@@ -100,27 +105,27 @@ void Day(void)
 
         if (state == DAYNIGHT_EVENING_DEBOUNCE_STATE) 
         {
-            printf_P(PSTR("\"EVENING\""));
+            printf_P(PSTR("\"EVE\""));
         }
 
        if (state == DAYNIGHT_NIGHTWORK_STATE) 
         {
-            printf_P(PSTR("\"NIGHTWORK\""));
+            printf_P(PSTR("\"NEVT\""));
         }
 
         if (state == DAYNIGHT_NIGHT_STATE) 
         {
-            printf_P(PSTR("\"NIGHT\""));
+            printf_P(PSTR("\"NGHT\""));
         }
 
         if (state == DAYNIGHT_MORNING_DEBOUNCE_STATE) 
         {
-            printf_P(PSTR("\"MORNING\""));
+            printf_P(PSTR("\"MORN\""));
         }
 
         if (state == DAYNIGHT_DAYWORK_STATE) 
         {
-            printf_P(PSTR("\"DAYWORK\""));
+            printf_P(PSTR("\"DEVT\""));
         }
 
         if (state == DAYNIGHT_FAIL_STATE) 
@@ -133,7 +138,7 @@ void Day(void)
     else if ( (command_done == 12) ) 
     { // delay between JSON printing
         unsigned long kRuntime= millis() - serial_print_started_at;
-        if ((kRuntime) > ((unsigned long)SERIAL_PRINT_DELAY_MILSEC))
+        if ((kRuntime) > (serial_print_delay_milsec))
         {
             command_done = 10; /* This keeps looping output forever (until a Rx char anyway) */
         }
@@ -141,26 +146,26 @@ void Day(void)
 }
 
 /* check for daytime state durring program looping  
-    dayState 
+    adc_ch_with_red_led_sensor: ADC channel
+    dayState: range 0..7
     0 = default at startup, if above Evening Threshold set day, else set night.
     1 = day: wait for evening threshold, set for evening debounce.
-    2 = evening_debounce: wait for EVENING_DEBOUCE to finish, then set night, however if debouce fails set back to day.
-    3 = night: wait for morning threshold, set morning_debounce.
-    4 = morning_debounce: wait for MORNING_DEBOUCE to finish, then set irrigation, however if debouce fails set back to night.
-    5 = work: do some work.
-    6 = fail: fail state.
+    2 = evening_debounce: wait for debounce time, do night_work, however if debouce fails set back to day.
+    3 = night_work: do night callback and set night.
+    4 = night: wait for morning threshold, set morning_debounce.
+    5 = morning_debounce: wait for debounce time, do day_work, however if debouce fails set back to night.
+    6 = day_work: do day callback and set for day.
+    7 = fail: fail state.
 */
-void CheckDayLight(void) 
-{
-    int Morning_Threshold = MORNING_THRESHOLD;
-    int Evening_Threshold = EVENING_THRESHOLD;
-  
+void CheckDayLight(uint8_t adc_ch_with_red_led_sensor) 
+{ 
+    int sensor_val = analogRead(adc_ch_with_red_led_sensor);
     if(dayState == DAYNIGHT_START_STATE) 
     { 
         unsigned long kRuntime= millis() - dayTmrStarted;
         if ((kRuntime) > ((unsigned long)STARTUP_DELAY)) 
         {
-            if(analogRead(PV_V) > Evening_Threshold ) 
+            if(sensor_val > evening_threshold ) 
             {
                 dayState = DAYNIGHT_DAY_STATE; 
                 dayTmrStarted = millis();
@@ -176,7 +181,7 @@ void CheckDayLight(void)
   
     if(dayState == DAYNIGHT_DAY_STATE) 
     { //day
-        if (analogRead(PV_V) < Evening_Threshold ) 
+        if (sensor_val < evening_threshold ) 
         {
             dayState = DAYNIGHT_EVENING_DEBOUNCE_STATE;
             dayTmrStarted = millis();
@@ -192,10 +197,10 @@ void CheckDayLight(void)
   
     if(dayState == DAYNIGHT_EVENING_DEBOUNCE_STATE) 
     { //evening_debounce
-        if (analogRead(PV_V) < Evening_Threshold ) 
+        if (sensor_val < evening_threshold ) 
         {
             unsigned long kRuntime= millis() - dayTmrStarted;
-            if ((kRuntime) > ((unsigned long)EVENING_DEBOUCE)) 
+            if ((kRuntime) > (evening_debouce)) 
             {
                 dayState = DAYNIGHT_NIGHTWORK_STATE;
                 dayTmrStarted = millis();
@@ -210,16 +215,15 @@ void CheckDayLight(void)
     }
 
     if(dayState == DAYNIGHT_NIGHTWORK_STATE) 
-    { 
-        //do some work, e.g. load night light settings at the start of a night
-        dayState_atNightWork();
+    { //do the night work callback, e.g. load night light settings at the start of a night
+        if (dayState_atNightWork != NULL) dayState_atNightWork();
         dayState = DAYNIGHT_NIGHT_STATE;
         return;
     }
 
     if(dayState == DAYNIGHT_NIGHT_STATE) 
     { //night
-        if (analogRead(PV_V) > Morning_Threshold ) 
+        if (sensor_val > morning_threshold ) 
         {
             dayState = DAYNIGHT_MORNING_DEBOUNCE_STATE;
             dayTmrStarted = millis();
@@ -235,10 +239,10 @@ void CheckDayLight(void)
 
     if(dayState == DAYNIGHT_MORNING_DEBOUNCE_STATE) 
     { //morning_debounce
-        if (analogRead(PV_V) > Morning_Threshold ) 
+        if (sensor_val > morning_threshold ) 
         {
             unsigned long kRuntime= millis() - dayTmrStarted;
-            if ((kRuntime) > ((unsigned long)MORNING_DEBOUCE)) 
+            if ((kRuntime) > (morning_debouce)) 
             {
                 dayState = DAYNIGHT_DAYWORK_STATE;
             }
@@ -251,9 +255,8 @@ void CheckDayLight(void)
     }
 
     if(dayState == DAYNIGHT_DAYWORK_STATE) 
-    { 
-        //do some work, e.g. load irrigation settings at the start of a day
-        dayState_atDayWork();
+    { //do the day work callback, e.g. load irrigation settings at the start of a day
+        if (dayState_atDayWork != NULL) dayState_atDayWork();
         dayState = DAYNIGHT_DAY_STATE;
         return;
     }

@@ -1413,7 +1413,7 @@ grid 2.54 mm</description>
 <part name="R1" library="R-C" deviceset="R" device="0805" value="10k"/>
 <part name="U$1" library="Documentation" deviceset="IRRIGATE7" device=""/>
 <part name="Q1" library="Q-NPN" deviceset="NPN" device="SOT23" value="2N3904"/>
-<part name="R2" library="R-C" deviceset="R" device="0805" value="500"/>
+<part name="R2" library="R-C" deviceset="R" device="0805" value="10k"/>
 <part name="R3" library="R-C" deviceset="R" device="0805" value="100k"/>
 <part name="R4" library="R-C" deviceset="R" device="0805" value="10k"/>
 </parts>

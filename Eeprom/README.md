@@ -1,159 +1,108 @@
-# AVR EEPROM
+# EEPROM
 
 ## Overview
 
-Eeprom is an interactive command line program that demonstrates the control of an ATmega1284p EEPROM.
+Eeprom is an interactive command line program that demonstrates the control of EEPROM on an ATmega1284p.
 
-Depends on avr/eeprom.h from avr-libc <http://www.nongnu.org/avr-libc/user-manual/group__avr__eeprom.html>.
+# EEPROM Memory map 
 
-For how I setup my Makefile toolchain <http://epccs.org/indexes/Document/DvlpNotes/LinuxBoxCrossCompiler.html>.
+A map of how some of my applications use the EEPROM. 
 
-With a serial port connection (set the BOOT_PORT in Makefile) and optiboot installed on the RPUno run 'make bootload' and it should compile and then flash the MCU.
+```
+function                    type        ee_addr:
+Adc::id                     UINT16      30
+Adc::ref_extern_avcc        UINT32      32
+Adc::ref_intern_1v1         UINT32      36
+Solenoid::id                UINT16      40   60   80   100  120  140  160
+Solenoid::delay_start_sec   UINT32      42   62   82   102  122  142  162
+Solenoid::runtime_sec       UINT32      46   66   86   106  126  146  166
+Solenoid::delay_sec         UINT32      50   70   90   110  130  150  170
+Solenoid::flow_stop         UINT32      54   74   94   114  134  154  174
+Solenoid::cycles            UINT8       58   78   98   118  138  158  178
+NightLight::id              UINT16      200  220  240  260
+NightLight::delay_start_sec UINT32      202  222  242  262
+NightLight::runtime_sec     UINT32      206  226  246  266
+NightLight::delay_sec       UINT32      210  230  250  270
+NightLight::mahr_stop       UINT32      214  234  254  274
+NightLight::cycles          UINT16      218  238  258  278
+```
+
+## Firmware Upload
+
+With a serial port connection (set the BOOTLOAD_PORT in Makefile) and optiboot installed on the RPUno run 'make bootload' and it should compile and then flash the MCU.
 
 ``` 
-rsutherland@conversion:~/Samba/Irrigate7/Eeprom$ make bootload
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o main.o main.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ee.o ee.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../Uart/id.o ../Uart/id.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/timers.o ../lib/timers.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/uart.o ../lib/uart.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/adc.o ../lib/adc.c
-avr-gcc -Os -g -std=gnu99 -Wall -ffunction-sections -fdata-sections  -DF_CPU=16000000UL   -DBAUD=115200UL -I.  -mmcu=atmega1284p -c -o ../lib/parse.o ../lib/parse.c
-avr-gcc -Wl,-Map,Eeprom.map  -Wl,--gc-sections  -Wl,-u,vfprintf -lprintf_flt -lm -mmcu=atmega1284p main.o ee.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/adc.o ../lib/parse.o -o Eeprom.elf
-avr-size -C --mcu=atmega1284p Eeprom.elf
-AVR Memory Usage
-----------------
-Device: atmega1284p
-
-Program:    7696 bytes (5.9% Full)
-(.text + .data + .bootloader)
-
-Data:        177 bytes (1.1% Full)
-(.data + .bss + .noinit)
-
-
-rm -f Eeprom.o main.o ee.o ../Uart/id.o ../lib/timers.o ../lib/uart.o ../lib/adc.o ../lib/parse.o
-avr-objcopy -j .text -j .data -O ihex Eeprom.elf Eeprom.hex
-rm -f Eeprom.elf
-avrdude -v -p atmega1284p -c avr109 -P /dev/ttyUSB0 -b 115200 -e -u -U flash:w:Eeprom.hex
-
-avrdude: Version 6.2
-         Copyright (c) 2000-2005 Brian Dean, http://www.bdmicro.com/
-         Copyright (c) 2007-2014 Joerg Wunsch
-
-         System wide configuration file is "/etc/avrdude.conf"
-         User configuration file is "/home/rsutherland/.avrduderc"
-         User configuration file does not exist or is not a regular file, skipping
-
-         Using Port                    : /dev/ttyUSB0
-         Using Programmer              : avr109
-         Overriding Baud Rate          : 115200
-         AVR Part                      : ATmega1284P
-         Chip Erase delay              : 55000 us
-         PAGEL                         : PD7
-         BS2                           : PA0
-         RESET disposition             : dedicated
-         RETRY pulse                   : SCK
-         serial program mode           : yes
-         parallel program mode         : yes
-         Timeout                       : 200
-         StabDelay                     : 100
-         CmdexeDelay                   : 25
-         SyncLoops                     : 32
-         ByteDelay                     : 0
-         PollIndex                     : 3
-         PollValue                     : 0x53
-         Memory Detail                 :
-
-                                  Block Poll               Page                       Polled
-           Memory Type Mode Delay Size  Indx Paged  Size   Size #Pages MinW  MaxW   ReadBack
-           ----------- ---- ----- ----- ---- ------ ------ ---- ------ ----- ----- ---------
-           eeprom        65    10   128    0 no       4096    8      0  9000  9000 0xff 0xff
-           flash         65    10   256    0 yes    131072  256    512  4500  4500 0xff 0xff
-           lock           0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
-           lfuse          0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
-           hfuse          0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
-           efuse          0     0     0    0 no          1    0      0  9000  9000 0x00 0x00
-           signature      0     0     0    0 no          3    0      0     0     0 0x00 0x00
-           calibration    0     0     0    0 no          1    0      0     0     0 0x00 0x00
-
-         Programmer Type : butterfly
-         Description     : Atmel AppNote AVR109 Boot Loader
-
-Connecting to programmer: .
-Found programmer: Id = "XBoot++"; type = S
-    Software Version = 1.7; No Hardware Version given.
-Programmer supports auto addr increment.
-Programmer supports buffered memory access with buffersize=256 bytes.
-
-Programmer supports the following devices:
-    Device code: 0x7b
-
-avrdude: devcode selected: 0x7b
-avrdude: AVR device initialized and ready to accept instructions
-
-Reading | ################################################## | 100% 0.00s
-
-avrdude: Device signature = 0x1e9705 (probably m1284p)
-avrdude: erasing chip
-avrdude: reading input file "Eeprom.hex"
-avrdude: input file Eeprom.hex auto detected as Intel Hex
-avrdude: writing flash (7696 bytes):
-
-Writing | ################################################## | 100% 1.06s
-
-avrdude: 7696 bytes of flash written
-avrdude: verifying flash memory against Eeprom.hex:
-avrdude: load data flash data from input file Eeprom.hex:
-avrdude: input file Eeprom.hex auto detected as Intel Hex
-avrdude: input file Eeprom.hex contains 7696 bytes
-avrdude: reading on-chip flash data:
-
-Reading | ################################################## | 100% 0.78s
-
-avrdude: verifying ...
-avrdude: 7696 bytes of flash verified
-
+sudo apt-get install git gcc-avr binutils-avr gdb-avr avr-libc avrdude
+git clone https://github.com/epccs/Irrigate7/
+cd /Irrigate7/Eeprom
+make bootload
+...
 avrdude done.  Thank you.
 ``` 
 
-Now connect with picocom (or ilk). Note I am often at another computer doing this through SSH. The Samba folder is for editing the files from Windows.
-
+Now connect with picocom (or ilk).
 
 ``` 
 #exit is C-a, C-x
-picocom -b 115200 /dev/ttyUSB0
+picocom -b 38400 /dev/ttyUSB0
 ``` 
+
 
 # Commands
 
-Commands are interactive over the serial interface at 115200 baud rate. The echo will start after the second character of a new line. 
+Commands are interactive over the serial interface at 38400 baud rate. The echo will start after the second character of a new line. 
 
-## /0/id? [name|desc|avr-gcc]
+
+## /\[rpu_address\]/\[command \[arg\]\]
+
+rpu_address is taken from the I2C address 0x29 (e.g. get_Rpu_address() which is included form ../Uart/id.h). The value of rpu_address is used as a character in a string, which means don't use a null value (C strings are null terminated), but the ASCII value for '1' (0x31) is easy and looks nice, though I fear it will cause some confusion when it is discovered that the actual address value is 49.
+
+Commands and their arguments follow.
+
+
+## /0/id? \[name|desc|avr-gcc\]
 
 identify 
 
 ``` 
-/0/id?
-{"id":{"name":"Eeprom","desc":"Irrigate7 Board /w atmega1284p and LT3652","avr-gcc":"4.9"}}
+/1/id?
+{"id":{"name":"Eeprom","desc":"Irrigate7 (14320^5) Board /w atmega1284p","avr-gcc":"5.4.0"}}
 ```
 
-##  /0/ee? 0..4095
+##  /0/ee? address\[,type\]
 
-Return the EEPROM value at address. This checks if eeprom_is_ready() befor trying to read the EEPROM, if it is not ready the program loops back through the round robin where a received charactor may terminate the command. 
+Return the EEPROM value at address (0..4095 on Irrigate7). Type is UINT8, UINT16 or UINT32. Default type is UINT8. This checks if eeprom_is_ready() befor trying to read the EEPROM, if not ready it loops back through the program. 
 
 ``` 
-/0/ee? 0
-{"EE[0]":"255"}
+/1/ee? 0
+{"EE[0]":{"r":"255"}}
+/1/ee? 0,UINT8
+{"EE[3]":{"r":"255"}}
+/1/ee? 30,UINT16
+{"EE[30]":{"r":"16708"}}
+/1/ee? 32,UINT32
+{"EE[32]":{"r":"4999700"}}
+/1/ee? 36,UINT32
+{"EE[36]":{"r":"1069341"}}
 ```
 
-##  /0/ee 0..1023,0..255
+Note: The numbers are packed little endian by the gcc compiler (AVR itself has no endianness). The AVCC calibration value is 4.9997V, and 1V1 calibration is 1.069341V
 
-Write the value given as argument one to the address given as Argument zero. This checks if eeprom_is_ready() befor trying to write to the EEPROM, if it is not ready the program loops back through the round robin where a received charactor may terminate the command. If the command is terminated the write may not occure. The JSON response is a read of the EEPROM. 
 
-Warning writing EEPROM can lead to device failure, it is only rated for 100k write cycles.
+##  /0/ee address,value\[,type\]
+
+Write the value to the address (0..4095 on Irrigate7) as type. Type is Type is UINT8, UINT16 or UINT32. Default type is UINT8. This checks if eeprom_is_ready() befor trying to read the EEPROM, if not ready it loops back through the program. The JSON response is a read of the EEPROM. 
+
+__Warning__ writing EEPROM can lead to device failure, it is only rated for 100k write cycles.
 
 ``` 
-/0/ee 0,16
-{"EE[0]":"16"}
+/1/ee 0,255
+{"EE[0]":{"byte":"255","r":"255"}} 
+/1/ee 1,128,UINT8
+{"EE[1]":{"byte":"128","r":"128"}}
+/1/ee 2,65535,UINT16
+{"EE[2]":{"word":"65535","r":"65535"}}
+/1/ee 0,4294967295,UINT32
+{"EE[0]":{"dword":"4294967295","r":"4294967295"}}
 ```
+Note: 4294967295 is 0xFFFFFFFF, it is the default for a blank chip.

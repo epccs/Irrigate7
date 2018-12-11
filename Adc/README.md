@@ -34,6 +34,7 @@ The internal 1V1 bandgap is not trimmed by the manufacturer, so it is nearly use
 With a serial port connection (see BOOTLOAD_PORT in Makefile) and xboot installed on the Irrigate7 run 'make bootload' and it should compile and then flash the MCU.
 
 ```
+sudo apt-get install git gcc-avr binutils-avr gdb-avr avr-libc avrdude
 git clone https://github.com/epccs/Irrigate7/
 cd /Irrigate7/Adc
 make bootload

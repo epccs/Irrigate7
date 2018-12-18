@@ -3,6 +3,7 @@ TARGET = Digital
 LIBDIR = ../lib
 OBJECTS = main.o \
 	digital.o \
+	status.o \
 	../Uart/id.o \
 	$(LIBDIR)/timers.o \
 	$(LIBDIR)/uart.o \

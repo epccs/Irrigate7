@@ -59,7 +59,7 @@ Set the Data Direction Register (DDRx) bit that sets a pin as INPUT or OUTPUT.
 {"PD3":"INPUT"}
 ```
 
-Note: digital 3 is driven as a status LED and will stop blinking as an INPUT
+Note: digital 3 may have a status LED, see showstat bellow.
 
 
 ##  /0/dWrt 2|3|24..27,HIGH|LOW    
@@ -73,7 +73,7 @@ Set the Port Data Register (PORTx) bit that drives the pin or if mode (e.g. Port
 {"PD3":"LOW"}
 ```
 
-Digital 3 is set as INPUT so it is not in the push-pull mode, the HIGH turns on a weak pullup and a LOW turns off the pullup.
+Digital 3 is set as INPUT so it is not in the push-pull mode, the HIGH turns on a weak pullup and a LOW turns off the pullup, it reads as a LOW because the red LED has 1.6V with the weak pullup.
 
 
 ##  /0/dTog 2|3|24..27
@@ -99,4 +99,16 @@ Read the Port Input Register (PINx) bit that was latched during last low edge of
 {"PD2":"HIGH"}
 /1/dRe? 3
 {"PD3":"LOW"}
+```
+
+
+##  /0/showstat ON|OFF
+
+An IO (TX1) can be used to show status, but it is not ON by default.
+
+``` 
+/1/showstat ON
+{"SHOW":"ON"}
+/1/showstat OFF
+{"SHOW":"OFF"}
 ```

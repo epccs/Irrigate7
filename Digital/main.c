@@ -26,6 +26,7 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "../lib/pins_board.h"
 #include "../Uart/id.h"
 #include "digital.h"
+#include "status.h"
 
 #define STATUS_LED TX1
 
@@ -56,12 +57,15 @@ void ProcessCmd()
     {
         Read();
     }
+    if ( (strcmp_P( command, PSTR("/showstat")) == 0) && ( (arg_count == 1 ) ) )
+    {
+        ShowStatus();
+    }
 }
 
 void setup(void) 
 {
     pinMode(STATUS_LED,OUTPUT);
-    digitalWrite(STATUS_LED,HIGH);
     
     // Initialize Timers and clear bootloader, Arduino does these with init() in wiring.c
     initTimers(); //Timer0 Fast PWM mode, Timer1 & Timer2 Phase Correct PWM mode.
@@ -90,6 +94,9 @@ void setup(void)
         rpu_addr = '0';
         blink_delay = BLINK_DELAY/4;
     }
+    
+    // do not use TX1 to show status unless told with the CLI
+    show_status = 0;
 }
 
 void blink(void)
@@ -97,7 +104,7 @@ void blink(void)
     unsigned long kRuntime = millis() - blink_started_at;
     if ( kRuntime > blink_delay)
     {
-        digitalToggle(STATUS_LED);
+        if (show_status) digitalToggle(STATUS_LED);
         
         // next toggle 
         blink_started_at += blink_delay; 

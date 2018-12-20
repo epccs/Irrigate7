@@ -2,28 +2,28 @@
 
 ## Future improvements (to do)
 
-Did the flow meter not stop when the valve was closed, try to close the valve again a few times. Set a status value for the command line to read, and sort out a way to do a service request, perhaps with the bus manager.
+Boost voltage selected with Solenoid id from eeprom (e.g. Solenoid will then have three valide id's)
 
-Option to include some scaled time (or flow count) based on PV power received. In other words, keep the peak mA-Sec per hour charge rate and use it to scale the last measured hour of that value to add solenoid time (or flow count). 
+Irrigation valve got stuck. Check if the flow meter has stopped when the valve was closed, try to close the valve again a few times. Set a status value for the command line to read, and sort out a way to do a service request, perhaps with the bus manager.
+
+Plants need more water when they get more sun. Add an option to scale the mount of water based on integration of the light sensor. 
 
 ## Overview
 
-Solenoid is an interactive command line program that demonstrates control of the latching solenoid drivers. 
+Solenoid is an interactive command line program that demonstrates control of seven (K7) latching solenoid driver using using an ATmega1284p. 
 
-The solenoid state machine is implemented with the SolenoidControl() function. However before that can be used LoadSolenoidControlFromEEPROM() needs to fill the solenoid array with saved values and initialize it with StartSolenoid(), both of which are done when the day-night state machine runs the callback_for_day_attach() function.
+Solenoid uses non-blocking timers in its SolenoidControl() function to cycle through the K[1..7].cycle_state that is used to control the latching solenoids. Each night the Night_AttachWork event runs. I have it disable the alternate power input. Each day the Day_AttachWork event runs. I have this event enable the alternate power input, clear counters, LoadSolenoidControlFromEEPROM(), and StartSolenoid().
 
-Once the state machine has started it allows an initial delay, which is used at power up to make sure the valves are all off, they are run for a second with a delay to offset each one. Once the initial delay is done then the cycles begin which includes a runtime and a delay. Durring the runtime the flowmeater is marked in use and the flow counts are recorded for that solenoid. If the delay is not enough to allow the other valves to run then the lowest number valve has priority (due to the logic of the program) and will hog the runtime.
+A 12V AGM LA battery is connected to the main power input. A solar panel is connected to the Alternate power input to allow charging the battery.
 
-The implementation is very flexible, for example, there are resources constraints like when the boost converter is in use, or when the flow meter is in use. These constraints need to block other solenoids from using them even if they have passed a wait time between usage. This is critical for insuring  the flow meter values for a solenoid are in fact for that solenoid.
++The solar panel short-circuit current needs to be less than about 1.5A so an SLP020-12U with Isc 1.3A should work, however an SLP030-12U with Isc 1.93 is too much. The battery should charge at 0.1C so for an SLP020-12U it needs to be at least 13AHr. If the charging is about 50% efficient then I will only get back about 3.25AHr of the 6.5AHr that was put in during a 5Hr charging time (that is about what I see). For a long life expectancy, the battery should not discharge more than about 20%, so a size that will do many charge cycles is 16.25AHr.
 
 
-## Test Wiring
+## Wiring
 
-![Wiring](./Setup/SolenoidTestWiring.png)
+![Wiring](./Setup/SolenoidWiring.png)
 
-This setup is used to test the solenoid drivers. 
-
-Note that the 2200uF capacitor is not discharged after the test, use a 100 Ohm 2W resistor to discharge it before removing the connector.
+The STATUS LED blinks on and off for a second when a rpu_address is read over I2C (if I2C failed it blinks four times as fast). The DAY-NIGHT LED turns on when the light sensor (e.g. the solar panel) has some light on it.
 
 
 # EEPROM Memory map 
@@ -31,13 +31,14 @@ Note that the 2200uF capacitor is not discharged after the test, use a 100 Ohm 2
 A map of the solenoid settings in EEPROM. 
 
 ```
-function            type    ee_addr:K1  K2 .. K7
-id                  UINT16          40  60 .. 160
-delay_start_sec     UINT32          42  62 .. 162
-runtime_sec         UINT32          46  66 .. 166
-delay_sec           UINT32          50  70 .. 170
-flow_stop           UINT32          54  74 .. 174
-cycles              UINT8           58  78 .. 178
+                                        K1   K2   K3   K4   K5   K6   K7
+function                    type        ee_addr
+Solenoid::id                UINT16      40   60   80   100  120  140  160
+Solenoid::delay_start_sec   UINT32      42   62   82   102  122  142  162
+Solenoid::runtime_sec       UINT32      46   66   86   106  126  146  166
+Solenoid::delay_sec         UINT32      50   70   90   110  130  150  170
+Solenoid::flow_stop         UINT32      54   74   94   114  134  154  174
+Solenoid::cycles            UINT8       58   78   98   118  138  158  178
 ```
 
 
@@ -48,20 +49,23 @@ The [day-night][../DayNight] state machine is used to load and run EEPROM values
 
 # Flow Sensor
 
-ICP1 is available through the [Capture][../Capture] commands.
+ICP1 is available through the [Capture][../Capture] commands. The differance in capture counts is held as flow data for each zone and its value is part of the flow report (see /flow? command).
 
 
 # Firmware Upload
 
-With a serial port connection (set the BOOT_PORT in Makefile) and optiboot installed on the Irrigate7 run 'make bootload' and it should compile and then flash the MCU.
+With a serial port connection (set the BOOTLOAD_PORT in Makefile) and xboot installed on the Irrigate7 run 'make bootload' and it should compile and then flash the MCU.
 
 ``` 
-rsutherland@conversion:~/Samba/Irrigate7/Solenoid$ make bootload
+sudo apt-get install git gcc-avr binutils-avr gdb-avr avr-libc avrdude
+git clone https://github.com/epccs/Irrigate7/
+cd /Irrigate7/Solenoid
+make bootload
 ...
 avrdude done.  Thank you.
 ``` 
 
-Now connect with picocom (or ilk). Note I am often at another computer doing this through SSH. The Samba folder is for editing the files from Windows.
+Now connect with picocom (or ilk).
 
 ``` 
 #exit is C-a, C-x
@@ -83,167 +87,205 @@ The LED_BUILTIN is bliked fast (twice per second) if the I2C address is not foun
 Commands and their arguments follow.
 
 
-## /0/id? [name|desc|avr-gcc]
+## /0/id? \[name|desc|avr-gcc\]
 
 Identify is from ../Uart/id.h Id().
 
 ``` 
 /1/id?
-{"id":{"name":"Solenoid","desc":"Irrigate7 Board /w atmega1284p and LT3652","avr-gcc":"4.9"}}
+{"id":{"name":"Solenoid","desc":"Irrigate7 (14320^5) Board /w atmega1284p","avr-gcc":"5.4.0"}}
 ```
 
 
-##  /0/run k[,cycles] 
+##  /0/krun k\[,cycles\] 
 
-Start the solenoid k (1|2|3) operation, with option to override cycles (1..255). 
+Start the solenoid k (1..7) operation, with option to override cycles (1..255). 
 
 If EEPROM does not have settings the solenoids retains initialized values (delay_start = 1..7, runtime= 1, delay = 3600, flow_stop = not used) that will cause each solenoid to operate for a second after a delay_start time that spaces there operation out by 3 seconds each (it insures all are in a known state).
 
 After a solenoid has entered the delay state and let go of the flow meter resource another solenoid that is ready to use the flow meter will do so. Make sure to set the delay time long enough that all the other solenoids can use their runtime, or the flow meter becomes a resource constraint and some zones will get shorted. For example set all the delay times to 360 and make sure the combined runtimes do not add up to 360 (i.e. 100, 80, 120).
 
 ```
-/1/run 1,1
+/1/krun 1,1
 {"K1":{"delay_start_sec":"1","runtime_Sec":"1","delay_Sec":"3600","cycles":"1"}}
-/1/run 2,1
+/1/krun 2,1
 {"K2":{"delay_start_sec":"4","runtime_Sec":"1","delay_Sec":"3600","cycles":"1"}}
-/1/run 3,1
+/1/krun 3,1
 {"K3":{"delay_start_sec":"7","runtime_Sec":"1","delay_Sec":"3600","cycles":"1"}}
+/1/krun 4,1
+{"K4":{"delay_start_sec":"10","runtime_sec":"1","delay_sec":"3600","cycles":"1"}}
+/1/krun 5,1
+{"K5":{"delay_start_sec":"13","runtime_sec":"1","delay_sec":"3600","cycles":"1"}}
+/1/krun 6,1
+{"K6":{"delay_start_sec":"16","runtime_sec":"1","delay_sec":"3600","cycles":"1"}}
+/1/krun 7,1
+{"K7":{"delay_start_sec":"19","runtime_sec":"1","delay_sec":"3600","cycles":"1"}}
 ```
 
 
-##  /0/save k,cycles 
+##  /0/ksave k,cycles 
 
-Save the solenoid k (1|2|3) with cycles (1..255) to EEPROM, it can then autostart.
+Save the solenoid k (1..7) with cycles (1..255) to EEPROM, it can then autostart.
 
 Saved settings are loaded and operated at the start of each day.
 
 ```
-/1/save 1,10
-{"K1":{"delay_start_sec":"3","runtime_Sec":"10","delay_Sec":"40","cycles":"10"}}
-/1/save 2,10
-{"K2":{"delay_start_sec":"16","runtime_Sec":"10","delay_Sec":"40","cycles":"10"}}
-/1/save 3,10
-{"K3":{"delay_start_sec":"29","runtime_Sec":"10","delay_Sec":"40","cycles":"10"}}
+/1/ksave 1,10
+{"K1":{"delay_start_sec":"1","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
+/1/ksave 2,10
+{"K2":{"delay_start_sec":"600","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
+/1/ksave 3,10
+{"K3":{"delay_start_sec":"1200","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
 ```
 
-##  /0/load k
+##  /0/kload k
 
-Load the solenoid k (1|2|3) from EEPROM. Use run to start it.
+Load the solenoid k (1..7) from EEPROM. Use run to start it.
 
 ```
-/1/load 1
-{"K1":{"delay_start_sec":"10","runtime_Sec":"15","delay_Sec":"60","cycles":"10"}}
-/1/load 2
-{"K2":{"delay_start_sec":"30","runtime_Sec":"15","delay_Sec":"60","cycles":"10"}}
-/1/load 3
-{"K3":{"delay_start_sec":"50","runtime_Sec":"15","delay_Sec":"60","cycles":"10"}}
+/1/kload 1
+{"K1":{"delay_start_sec":"1","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
+/1/kload 2
+{"K2":{"delay_start_sec":"600","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
+/1/kload 3
+{"K3":{"delay_start_sec":"1200","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
 ```
 
 
-##  /0/stop k 
+##  /0/kstop k 
 
-Reduce the delay_start, runtime, and delay to one second each to stop the solenoid k (1|2|3) operation.
+Reduce the delay_start, runtime, and delay to one second each to stop the solenoid k (1..7) operation.
 
 To change the solenoids setting use /stop, then /load, and change the desired setting (e.g. /runtime) and finally save it and perhaps /run it.
 
 ```
-/1/stop 1
-{"K1":{"stop_time_sec":"3"}}
+/1/kstop 1
+{"K1":{"delay_start_sec":"1","runtime_sec":"1","delay_sec":"3600","cycles":"0"}}
 ```
 
 
-##  /0/pre k,delay_start_in_sec
+##  /0/kpre k,delay_start_in_sec
 
-Set the solenoid k (1|2|3) one time delay befor cycles run (1..21600, e.g. 6hr max). 
-
-``` 
-/1/pre 1,3
-{"K1":{"delay_start_sec":"3"}}
-/1/pre 2,16
-{"K2":{"delay_start_sec":"16"}}
-/1/pre 3,29
-{"K3":{"delay_start_sec":"29"}}
-/1/run 2,1
-{"K2":{"delay_start_sec":"16","runtime_sec":"10","delay_sec":"40","cycles":"1"}}
-``` 
-
-
-##  /0/runtime k,runtime_in_sec
-
-Set the solenoid k (1|2|3) run time (1..21600, e.g. 6hr max). 
+Set the solenoid k (1..7) one time delay befor cycles run (1..21600, e.g. 6hr max). 
 
 ``` 
-/1/runtime 1,10
-{"K1":{"runtime_sec":"10"}}
-/1/runtime 2,10
-{"K2":{"runtime_sec":"10"}}
-/1/runtime 3,10
-{"K3":{"runtime_sec":"10"}}
-/1/run 1,1
-{"K1":{"delay_start_sec":"2","runtime_sec":"10","delay_sec":"40","cycles":"1"}}
+/1/kpre 1,1
+{"K1":{"delay_start_sec":"1"}}
+/1/kpre 2,600
+{"K2":{"delay_start_sec":"600"}}
+/1/kpre 3,1200
+{"K3":{"delay_start_sec":"1200"}}
+/1/krun 1,1
+{"K1":{"delay_start_sec":"1","runtime_sec":"1","delay_sec":"3600","cycles":"1"}}
+``` 
+
+
+##  /0/krunt k,runtime_in_sec
+
+Set the solenoid k (1..7) run time (1..21600, e.g. 6hr max). 
+
+``` 
+/1/krunt 1,150
+{"K1":{"runtime_sec":"150",}}
+/1/krunt 2,150
+{"K2":{"runtime_sec":"150",}}
+/1/krunt 3,150
+{"K3":{"runtime_sec":"150",}}
+/1/krun 1,1
+{"K1":{"delay_start_sec":"1","runtime_sec":"150","delay_sec":"3600","cycles":"1"}}
 ```
 
 
-##  /0/delay k,delay_in_sec
+##  /0/kdelay k,delay_in_sec
 
-Set the solenoid k (1|2|3) delay between runs (1..86400, e.g. 24 hr max). 
+Set the solenoid k (1..7) delay between runs (1..86400, e.g. 24 hr max). 
 
 ```
-/1/delay 1,40
-{"K1":{"delay_sec":"40"}}
-/1/delay 2,40
-{"K2":{"delay_sec":"40"}}
-/1/delay 3,40
-{"K3":{"delay_sec":"40"}}
-/1/run 3,1
-{"K3":{"delay_start_sec":"7","runtime_sec":"1","delay_sec":"40","cycles":"1"}}
+/1/kdelay 1,3450
+{"K1":{"delay_sec":"3450"}}
+/1/kdelay 2,3450
+{"K2":{"delay_sec":"3450"}}
+/1/kdelay 3,3450
+{"K3":{"delay_sec":"3450"}}
+/1/krun 1,1
+{"K1":{"delay_start_sec":"1","runtime_sec":"150","delay_sec":"3450","cycles":"1"}}
 ```
 
 
-##  /0/fstop k,flow_stop
+##  /0/kfstop k,flow_stop
 
-Set the solenoid k (1|2|3) flow_stop (1..0xFFFFFFFF) that also stops the solenoid (e.g. when flow count is reached).
-
-``` 
-/1/fstop 3,500
-{"K3":{"flow_stop":"500"}}
-/1/run 3,1
-{"K3":{"delay_start_sec":"10","runtime_sec":"20","delay_sec":"40","cycles":"1","flow_stop":"500"}}
-``` 
-
-
-##  /0/flow? k
-
-Report the solenoid k (1|2|3) flow_cnt or pulses events on ICP1.
+Set the solenoid k (1..7) flow_stop (1..0xFFFFFFFF) that also stops the solenoid (e.g. when flow count is reached).
 
 ``` 
-/1/flow? 3
+/1/kfstop 1,500
+{"K1":{"flow_stop":"500"}}
+/1/krun 1,1
+{"K1":{"delay_start_sec":"1","runtime_sec":"150","delay_sec":"3450","cycles":"1","flow_stop":"500"}}
+``` 
+
+__May Not Work__ This has had limited testing. 
+
+
+##  /0/kflow? k
+
+Report the solenoid k (1..7) flow_cnt or pulses events on ICP1.
+
+``` 
+/1/kflow? 3
 {"K3":{"cycle_state":"11","cycles":"7","flow_cnt":"0"}}
 ``` 
 
 
-##  /0/time? k
+##  /0/ktime? k
 
-Report the solenoid k (1|2|3) runtime in millis.
+Report the solenoid k (1..7) runtime in millis.
 
 ``` 
-/1/time? 3
+/1/ktime? 3
 {"K3":{"cycle_state":"11","cycles":"9","cycle_millis":"15000"}}
 ``` 
+
+
+## [/0/analog? 0..7\[,0..7\[,0..7\[,0..7\[,0..7\]\]\]\]](../Adc#0analog-0707070707)
+
+
+## [/0/iscan?](../i2c-debug#0iscan)
+
+
+## [/0/iaddr 0..127](../i2c-debug#0iaddr-0127)
+
+
+## [/0/ibuff 0..255\[,0..255\[,0..255\[,0..255\[,0..255\]\]\]\]](../i2c-debug#0ibuff-02550255025502550255)
+
+
+## [/0/ibuff?](../i2c-debug#0ibuff)
+
+
+## [/0/iwrite](../i2c-debug#0iwrite)
+
+
+## [/0/iread?](../i2c-debug#0iread)
+
 
 ## [/0/day?](../DayNight#0day)
 
 
-## [/0/analog? 0..7[,0..7[,0..7[,0..7[,0..7]]]]](../Adc#0analog-0707070707)
+## [/0/charge?](../AmpHr#0charge)
+
+
+## [/0/alt](../Alternat#0alt)
+
+
+## [/0/altcnt?](../Alternat#0altcnt)
 
 
 ## [/0/initICP icp1,mode,prescale](../Capture#0initicp-icp1modeprescale)
 
 
-## [/0/count? [icp1]](../Capture#0count-icp1)
+## [/0/count? \[icp1\]](../Capture#0count-icp1)
 
 
-## [/0/capture? [icp1,1..15]](../Capture#0capture-icp1115)
+## [/0/capture? \[icp1,1..15\]](../Capture#0capture-icp1115)
 
 
-## [/0/event? [icp1,1..31]](../Capture#0event-icp1131)
+## [/0/event? \[icp1,1..31\]](../Capture#0event-icp1131)

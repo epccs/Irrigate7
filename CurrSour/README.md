@@ -7,12 +7,12 @@ There are four 22mA current sources CS0..CS3 controlled with ATmega1284p pins PB
 
 # Firmware Upload
 
-With a serial port connection (set the BOOTLOAD_PORT in Makefile) and optiboot installed on the RPUno run 'make bootload' and it should compile and then flash the MCU.
+With a serial port connection (set the BOOTLOAD_PORT in Makefile) and xboot installed on the Irrigate7 run 'make bootload' and it should compile and then flash the MCU.
 
 ``` 
 sudo apt-get install git gcc-avr binutils-avr gdb-avr avr-libc avrdude
-git clone https://github.com/epccs/RPUno/
-cd /RPUno/CurrSour
+git clone https://github.com/epccs/Irrigate7/
+cd /Irrigate7/CurrSour
 make bootload
 ...
 avrdude done.  Thank you.

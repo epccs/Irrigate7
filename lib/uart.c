@@ -389,6 +389,7 @@ ISR(UART0_TRANSMIT_INTERRUPT)
     }
 }
 
+// to do: see if it is useful, #include <util/setbaud.h>
 void uart0_init(uint16_t baudrate)
 {
     UART0_TxHead = 0;

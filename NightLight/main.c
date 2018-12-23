@@ -1,5 +1,5 @@
 /*
-Solenoid is a CLI demonstration for timing latching type devices while measuring a flow meter
+NightLight is a command line controled demonstration of LED control
 Copyright (C) 2016 Ronald Sutherland
 
 This program is free software; you can redistribute it and/or
@@ -23,7 +23,6 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "../lib/adc.h"
 #include "../lib/twi.h"
 #include "../lib/rpu_mgr.h"
-#include "../lib/icp1.h"
 #include "../lib/pin_num.h"
 #include "../lib/pins_board.h"
 #include "../Uart/id.h"
@@ -33,8 +32,7 @@ http://www.gnu.org/licenses/gpl-2.0.html
 #include "../DayNight/day_night.h"
 #include "../AmpHr/chrg_accum.h"
 #include "../Alternat/alternat.h"
-#include "../Capture/capture.h"
-#include "solenoid.h"
+#include "nightlight.h"
 
 #define ADC_DELAY_MILSEC 100UL
 static unsigned long adc_started_at;
@@ -49,55 +47,51 @@ static unsigned long day_status_blink_started_at;
 static unsigned long blink_started_at;
 static unsigned long blink_delay;
 static char rpu_addr;
-static uint8_t solenoids_initalized;
+static uint8_t leds_initalized;
 
 void ProcessCmd()
 { 
-    if (solenoids_initalized) 
+    if (leds_initalized) 
     {
         if ( (strcmp_P( command, PSTR("/id?")) == 0) && ( (arg_count == 0) || (arg_count == 1)) )
         {
-            Id("Solenoid"); // ../Uart/id.c
+            Id("NightLight"); // ../Uart/id.c
         }
-        if ( (strcmp_P( command, PSTR("/kpre")) == 0) && ( (arg_count == 2 ) ) )
+        if ( (strcmp_P( command, PSTR("/preled")) == 0) && ( (arg_count == 2 ) ) )
         {
-            KDelayStart(); // solenoid.c
+            NLDelayStart(); // nightlight.c
         }
-        if ( (strcmp_P( command, PSTR("/krunt")) == 0) && ( (arg_count == 2 ) ) )
+        if ( (strcmp_P( command, PSTR("/runtimeled")) == 0) && ( (arg_count == 2 ) ) )
         {
-            KRunTime(); // solenoid.c
+            NLRunTime(); // nightlight.c
         }
-        if ( (strcmp_P( command, PSTR("/kdelay")) == 0) && ( (arg_count == 2 ) ) )
+        if ( (strcmp_P( command, PSTR("/delayled")) == 0) && ( (arg_count == 2 ) ) )
         {
-            KDelay(); // solenoid.c
+            NLDelay(); // nightlight.c
         }
-        if ( (strcmp_P( command, PSTR("/kfstop")) == 0) && ( (arg_count == 2 ) ) )
+        if ( (strcmp_P( command, PSTR("/mahrled")) == 0) && ( (arg_count == 2 ) ) )
         {
-            KFlowStop(); // solenoid.c
+            NLAHrStop(); // nightlight.c
         }
-        if ( (strcmp_P( command, PSTR("/krun")) == 0) && ( (arg_count == 1) || (arg_count == 2) ) )
+        if ( (strcmp_P( command, PSTR("/runled")) == 0) && ( (arg_count == 1) || (arg_count == 2) ) )
         {
-            KRun(); // solenoid.c
+            NLRun(); // nightlight.c
         }
-        if ( (strcmp_P( command, PSTR("/ksave")) == 0) && ( (arg_count == 2 ) ) )
+        if ( (strcmp_P( command, PSTR("/saveled")) == 0) && ( (arg_count == 2 ) ) )
         {
-            KSave(); // solenoid.c
+            NLSave(); // nightlight.c
         }
-        if ( (strcmp_P( command, PSTR("/kload")) == 0) && ( (arg_count == 1 ) ) )
+        if ( (strcmp_P( command, PSTR("/loadled")) == 0) && ( (arg_count == 1 ) ) )
         {
-            KLoad(); // solenoid.c
+            NLLoad(); // nightlight.c
         }
-        if ( (strcmp_P( command, PSTR("/ktime?")) == 0) && ( (arg_count == 1 ) ) )
+        if ( (strcmp_P( command, PSTR("/led?")) == 0) && ( (arg_count == 1 ) ) )
         {
-            KTime(); // solenoid.c
+            NLTime(); // nightlight.c
         }
-        if ( (strcmp_P( command, PSTR("/kflow?")) == 0) && ( (arg_count == 1 ) ) )
+        if ( (strcmp_P( command, PSTR("/stopled")) == 0) && ( (arg_count == 1 ) ) )
         {
-            KFlow(); // solenoid.c
-        }
-        if ( (strcmp_P( command, PSTR("/kstop")) == 0) && ( (arg_count == 1 ) ) )
-        {
-            KStop(); // solenoid.c
+            NLStop(); // nightlight.c
         }
         if ( (strcmp_P( command, PSTR("/analog?")) == 0) && ( (arg_count >= 1 ) && (arg_count <= 5) ) )
         {
@@ -143,44 +137,34 @@ void ProcessCmd()
         {
             AltCount(); // ../Alternat/alternat.c
         }
-        if ( (strcmp_P( command, PSTR("/count?")) == 0) &&  ( (arg_count == 0) || ( (arg_count == 1) && (strcmp_P( arg[0], PSTR("icp1")) == 0) ) ) )
-        {
-            Count(); // ../Capture/capture.c
-        }
-        if ( (strcmp_P( command, PSTR("/capture?")) == 0) && ( (arg_count == 0 ) || ( (arg_count == 2) && (strcmp_P( arg[0], PSTR("icp1")) == 0) ) ) )
-        {
-            Capture(); // ../Capture/capture.c
-        }
-        if ( (strcmp_P( command, PSTR("/event?")) == 0) && ( (arg_count == 0 ) || ( (arg_count == 2) && (strcmp_P( arg[0], PSTR("icp1")) == 0) ) ) )
-        {
-            Event(); // ../Capture/capture.c
-        }
-        if ( (strcmp_P( command, PSTR("/initICP")) == 0) && ( ( (arg_count == 3) && (strcmp_P( arg[0], PSTR("icp1")) == 0) ) ) )
-        {
-            InitICP(); // ../Capture/capture.c
-        }
     }
     else
     {
-        if (! solenoids_initalized)
+        if (! leds_initalized)
         {
-            printf_P(PSTR("{\"err\":\"NotFinishKinit\"}\r\n"));
+            printf_P(PSTR("{\"err\":\"NotFinishLEDinit\"}\r\n"));
         }
         initCommandBuffer();
         return;
     }
 }
 
-//At start of each night 
+//At start of each night.
 void callback_for_night_attach(void)
 {
     //turn off alternat power input
-    alt_enable = 0;
+    alt_enable = 0; 
     
-    // turn off the Solenoid's
-    for (uint8_t solenoid = 1; solenoid <= SOLENOID_COUNT; solenoid++)
+    // If the battery got charged.
+    if (alt_count > 5) 
     {
-        StopK(solenoid);
+        for(uint8_t led = 1; led <= LEDSTRING_COUNT; led++)
+        {
+            // load the LED control settings from EEPROM
+            LoadLedControlFromEEPROM(led); // nightlight.c
+            // operate LED
+            StartLed(led); // nightlight.c
+        }
     }
 }
 
@@ -189,19 +173,17 @@ void callback_for_day_attach(void)
 {
     alt_enable = 1; //turn on alternat power input
     alt_count = 0; // this value is used to tell if the battery got a full charge
-
+    
     // setup AmpHr accumulators and load Adc calibration reference
     if (!init_ChargAccumulation(PWR_I)) // ../AmpHr/chrg_accum.c
     {
         blink_delay = BLINK_DELAY/4;
     }
-
-    for(uint8_t solenoid = 1; solenoid <= SOLENOID_COUNT; solenoid++)
+    
+    // turn off the LED's
+    for (uint8_t led = 1; led <= LEDSTRING_COUNT; led++)
     {
-        // load the solenoid control settings from EEPROM
-        LoadKControlFromEEPROM(solenoid);
-        // operate them
-        StartK(solenoid);
+        StopLED(led);
     }
 }
 
@@ -216,9 +198,6 @@ void setup(void)
     pinMode(ALT_EN,OUTPUT);
     digitalWrite(ALT_EN,LOW);
 
-    pinMode(CS_ICP1_EN,OUTPUT);
-    digitalWrite(CS_ICP1_EN,HIGH);
-
     // Initialize Timers, ADC, and clear bootloader, Arduino does these with init() in wiring.c
     initTimers(); //Timer0 Fast PWM mode, Timer1 & Timer2 Phase Correct PWM mode.
     init_ADC_single_conversion(EXTERNAL_AVCC); // warning AREF must not be connected to anything
@@ -227,9 +206,6 @@ void setup(void)
     // put ADC in Auto Trigger mode and fetch an array of channels
     enable_ADC_auto_conversion(BURST_MODE);
     adc_started_at = millis();
-
-    /* Initialize Input Capture Unit (see ../lib/icp1.h) */
-    initIcp1(TRACK_RISING, ICP1_MCUDIV64) ;
 
     /* Initialize UART, it returns a pointer to FILE so redirect of stdin and stdout works*/
     stdout = stdin = uartstream0_init(BAUD);
@@ -256,14 +232,11 @@ void setup(void)
         blink_delay = BLINK_DELAY/4;
     }
 
-    // setup solenoid control
-    init_K();
-    init_Boost(BOOST24V); // BOOST9V|BOOST12V|BOOST24V
+    // setup Led string control
+    init_Led();
 
-    // solenoids may have been previously latched so this
-    // loads settings that will run a quick cycle to home the hardware
-    Reset_All_K();
-    solenoids_initalized = 0;
+    Reset_All_LED();
+    leds_initalized = 0;
 
     // register callbacks for DayNight events
     Night_AttachWork(callback_for_night_attach);
@@ -424,24 +397,24 @@ int main(void)
             }
         }
         
-        // Solenoid Control is a function that moves them through different states that are timed with millis() or icp1 flow count.
-        KControl();
+        // Led Control is a non-blocking function that moves the LED's through different states that are timed with millis().
+        LedControl();
         
-        if (!solenoids_initalized)
+        if (!leds_initalized)
         {
             // lets test if they are in use.
-            uint8_t solenoids_in_use = 0;
-            for(uint8_t solenoid = 1; solenoid <= SOLENOID_COUNT; solenoid++)
+            uint8_t leds_in_use = 0;
+            for(uint8_t led = 1; led <= LEDSTRING_COUNT; led++)
             {
-                if (KLive(solenoid))
+                if (NLLive(led))
                 {
-                    solenoids_in_use =1;
+                    leds_in_use =1;
                     break;
                 }
             }
-            if (! solenoids_in_use) 
+            if (! leds_in_use) 
             {
-                solenoids_initalized = 1;
+                leds_initalized = 1;
             }
         }
     }        

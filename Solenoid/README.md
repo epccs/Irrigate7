@@ -2,6 +2,8 @@
 
 ## Future improvements (to do)
 
+If the sun is up when the MCU is reset or at power up then alternate power is not enabled until the next day. The workaround is to cover light sensor during reset or power up.
+
 Boost voltage selected with Solenoid id from eeprom (e.g. Solenoid will then have three valide id's)
 
 Irrigation valve got stuck. Check if the flow meter has stopped when the valve was closed, try to close the valve again a few times. Set a status value for the command line to read, and sort out a way to do a service request, perhaps with the bus manager.

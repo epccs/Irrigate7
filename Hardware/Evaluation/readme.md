@@ -7,14 +7,24 @@ This shows the setup and method used for evaluation of Irrigate7.
 
 # Table Of Contents:
 
-8. ^3 CL8 Interface
-7. ^2 Crystal Check
-6. ^2 RS422 Shield
-5. ^2 Lifting DIN Mount
-4. ^1 Sensor Loop Select
-3. ^1 CCtest
-2. ^1 With RPUftdi^2
-1. ^0A LT3652 Timer
+0. ^5 Port Software from RPUno^9
+0. ^3 CL8 Interface
+0. ^2 Crystal Check
+0. ^2 RS422 Shield
+0. ^2 Lifting DIN Mount
+0. ^1 Sensor Loop Select
+0. ^1 CCtest
+0. ^1 With RPUftdi^2
+0. ^0A LT3652 Timer
+
+
+## ^5 Port Software from RPUno^9
+
+On Irrigate7^5 the LT3652, CL8 interface, ICP3, and Sensor Loop's were removed. Basically, it is now an RPUno with an extended K3 (to K7) on board. When swapping an RPUno^9+K3 for the Irrigate7^5  the wiring is a lot easier, but a few changes are present. The KNL software now fits (uses about 27%) with every command available, so I have room to extend. The ported software needs more testing but there is less that can go wrong now that much of the design is the same. 
+
+SPI pins are now dedicated to that bus, ICP3 was on the MOSI pin. The RPUadpt^6 and hopefully the RPUpi^4 should allow options like SD cards and an SBC to do DAQ at higher rates. 
+
+I am looking at doing an I2C board with a PCA6985 used to control 16 channels of 22mA current sources. They could be used to drive capacitive sensors (and a range of other things). I think they could feed one at a time into the ICP1 input when its current source is disabled to capture the capacitive sensor oscillator timing. This would need to be initiated by the SBC since it will need to figure out what to do with the data anyway.
 
 
 ## ^3 CL8 Interface

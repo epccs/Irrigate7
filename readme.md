@@ -20,6 +20,8 @@ It is similar to the [RPUno] but has integrated K7 (which is a scaled up [K3]). 
 
 ## Status
 
+[![Build Status](https://travis-ci.org/epccs/Irrigate7.svg?branch=master)](https://travis-ci.org/epccs/Irrigate7)
+
 ![Status](./Hardware/status_icon.png "Status")
 
 ## [Hardware](./Hardware)
@@ -39,16 +41,11 @@ The host computer is able to use it's serial UART port with common software (e.g
 
 ## AVR toolchain
 
-The core files for this board are in the /lib folder. Each example has its files and a Makefile in its own folder. The toolchain is available as standard packages on Ubuntu, Raspbian, Windows 10 (with [WSL] installed), and probably Mac (I do not have a Mac). 
-
-[WSL]: https://docs.microsoft.com/en-us/windows/wsl/install-win10
+The core files for this board are in the /lib folder. Each example has its files and a Makefile in its own folder. The toolchain packages that I use are available on Ubuntu and Raspbian. 
 
 ```
-sudo apt-get install git make gcc-avr binutils-avr gdb-avr avr-libc avrdude
+sudo apt-get install make git gcc-avr binutils-avr gdb-avr avr-libc avrdude
 git clone https://github.com/epccs/Irrigate7
-cd Irrigate7/Adc
-make
-#uplaod with: make bootload
 ```
 
 * [gcc-avr](https://packages.ubuntu.com/search?keywords=gcc-avr)
@@ -57,12 +54,57 @@ make
 * [avr-libc](https://packages.ubuntu.com/search?keywords=avr-libc)
 * [avrdude](https://packages.ubuntu.com/search?keywords=avrdude)
 
-Use my software as guide to do your own, I use C because that is what works for me. The toolchain has been marvelous, but your mileage may vary. 
+I place an [Bootloader] on the bare metal microcontroller with a fuse step and a step that uploads using an ISP tool. 
 
-## Serial Bootload
+[Bootloader]: https://github.com/epccs/Irrigate7/tree/master/Bootloader
 
-After the compiler makes the executable  (a relocatable binary [ELF]) an uploader tool (avrdude) on a host computer is used to send it over a serial link to the bootloader that places it at the desired memory location. At this time I am trying [xboot] from Alex Forencich. I was interested in its ability to work with ATxmega, and wanted to try something other than [optiboot] (which also works with the ATmega1284p). 
+```
+cd Irrigate7/Bootloader
+# note /dev/ttyACM0 is my ICSP tool.
+make fuse
+make isp
+```
 
-[ELF]: https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
-[xboot]: https://github.com/alexforencich/xboot
-[optiboot]: https://github.com/MCUdude/optiboot_flash
+The other applications are loaded through the bootloader using the host serial port. Note that the fuse cannot be changed with the bootloader thus reducing user issues with an application upload.
+
+```
+cd ~/Irrigate7/Adc
+# note /dev/ttyUSB0 is a FTDI USBuart, and /dev/ttyAMA0 is a Raspberry Pi
+make bootload
+```
+
+The software is a guide, it is in C because that is my preference for microcontrollers. If you want additional software please add a Github issue to this repository where we can discuss it. 
+
+
+## Continuous Integration
+
+Continuous Integration (CI) is the practice of automatically compiling and testing each time the mainline source is updated (e.g. git push). Travis CI is using a version of Ubuntu as there host environment for doing the test build. The build machine allows pulling in any packages I want including the AVR cross compiler. I don't do anything fancy, just run make. A rule like "make test" could be used if the test build machine had hardware connected (e.g. "make bootload" and then "make test") to the machine, but that is not practical in the foreseeable future. This was fairly simple to set up for Travis because the ATmega1284p was in production at the time the Ubuntu toolchain was done.
+
+[https://travis-ci.org/epccs/Irrigate7](https://travis-ci.org/epccs/Irrigate7)
+
+Update: Travis has Ubuntu [Xenial] 16.04.
+
+[Xenial]: https://docs.travis-ci.com/user/reference/xenial/
+
+
+## Arduino IDE with MightyCore
+
+The Arduino [IDE] can use the [MightyCore] to compile programs, however I use my [core] files (which are C rather than C++), just remember to look at the schematic to see how the microcontroller is connected. I do not use the Arduino IDE or C++ (I am a hardware designer,.and have enough intrest in software to do what I want).
+
+[IDE]: https://www.arduino.cc/
+[MightyCore]: https://github.com/mcudude/MightyCore
+[core]: https://github.com/epccs/Irrigate7/tree/master/lib
+
+
+## Visual Studio Code
+
+VSC is an editor with some IDE features, it is happy with Makefiles. The feature that is driving me to use VSC is [IntelliSense]. It is configured with JSON files in [.vscode]. 
+
+[IntelliSense]: https://code.visualstudio.com/docs/editor/intellisense
+[.vscode]: https://github.com/epccs/Irrigate7/tree/master/.vscode
+
+IntelliSense needs access to the toolchain includes. The AVR toolchain has some in avr-libc (/usr/lib/avr/include), and gcc-avr (/usr/lib/gcc/avr/5.4.0/include). So I copy them into a Samba share for VSC to see (e.g. Y:/lib/avr-libc, and Y:/lib/gcc-avr) which is also where I edit the source (e.g. Y:/git/Irrigate7).
+
+VSC is becoming popular Sparkfun has a [tutorial] on how to use it with Arduino's C++ Library (9_9).
+
+[tutorial]: https://learn.sparkfun.com/tutorials/efficient-arduino-programming-with-arduino-cli-and-visual-studio-code/all

@@ -1,0 +1,49 @@
+# This file is used to configure Travis CI
+language: c
+dist: xenial
+sudo: required
+
+env:
+  matrix:
+    # Each line in the matrix will be a separate job when Travis CI runs the script section
+    # Travis does the clone like this
+    # git clone --depth=50 --branch=master https://github.com/epccs/Irrigate7.git epccs/Irrigate7
+    # so the path to each Makefile is as follows
+
+    - APP_PATH="Adc"
+    - APP_PATH="Alternat"
+    - APP_PATH="AmpHr"
+    - APP_PATH="BlinkLED"
+    - APP_PATH="Capture"
+    - APP_PATH="CurrSour"
+    - APP_PATH="DayNight"
+    - APP_PATH="Digital"
+    - APP_PATH="Eeprom"
+    # Hardware is not built like this
+    - APP_PATH="i2c-debug"
+    - APP_PATH="KNL"
+    # lib has the core files
+    - APP_PATH="NightLight"
+    - APP_PATH="Parsing"
+    # - APP_PATH="PwrMgt"
+    - APP_PATH="SelfTest"
+    - APP_PATH="Solenoid"
+    # - APP_PATH="SpiSlv"
+    - APP_PATH="Uart"
+
+before_install:
+  - sudo apt-get update -qq
+
+install:
+  - sudo apt-get install -qq gcc-avr binutils-avr avr-libc
+
+script:
+  - avr-gcc --version
+  - cd $APP_PATH
+  - make
+  - cat $APP_PATH.lst
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always

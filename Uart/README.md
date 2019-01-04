@@ -4,14 +4,17 @@
 
 Uart is an interactive command line program that demonstrates stdio redirect of a minimalized interrupt-driven UART core. 
 
-Referance ATmega1284p datasheet 19. USART Universal Synchronous and Asynchronous serial Receiver and Transmitter.
+Referance ATmega1284p datasheet USART Universal Synchronous and Asynchronous serial Receiver and Transmitter.
 
 ## Firmware Upload
 
-With a serial port connection (set the BOOT_PORT in Makefile) and optiboot installed on the RPUno run 'make bootload' and it should compile and then flash the MCU.
+With a serial port connection (see BOOTLOAD_PORT in Makefile) and xboot installed on the Irrigate7 run 'make bootload' and it should compile and then flash the MCU.
 
-``` 
-rsutherland@conversion:~/Samba/Irrigate7/Uart$ make bootload
+```
+sudo apt-get install git gcc-avr binutils-avr gdb-avr avr-libc avrdude
+git clone https://github.com/epccs/Irrigate7/
+cd /Irrigate7/Uart
+make bootload
 ...
 avrdude done.  Thank you.
 ``` 
@@ -34,5 +37,5 @@ identify
 
 ``` 
 /0/id?
-{"id":{"name":"Uart","desc":"Irrigate7 Board /w atmega1284p and LT3652","avr-gcc":"4.9"}}
+{"id":{"name":"Uart","desc":"Irrigate7 (14320^5) Board /w atmega1284p","avr-gcc":"5.4.0"}}
 ``` 

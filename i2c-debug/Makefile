@@ -1,5 +1,5 @@
 # Makefile 
-TARGET = I2c-debug
+TARGET = i2c-debug
 LIBDIR = ../lib
 OBJECTS = main.o \
 	i2c-scan.o \

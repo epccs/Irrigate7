@@ -1,4 +1,4 @@
-TARGET = blinkLED
+TARGET = BlinkLED
 LIBDIR = ../lib
 OBJECTS = main.o \
 	$(LIBDIR)/uart.o \

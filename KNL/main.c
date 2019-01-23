@@ -315,6 +315,7 @@ void setup(void)
 
     // setup solenoid control
     init_K();
+    init_Boost(BOOST24V); // BOOST9V|BOOST12V|BOOST24V
     Reset_All_K();
     solenoids_initalized = 0;
 

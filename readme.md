@@ -20,6 +20,8 @@ It is similar to the [RPUno] but has integrated K7 (which is a scaled up [K3]). 
 
 ## Status
 
+[Available](https://rpubus.org/Order_Form.html)
+
 [![Build Status](https://travis-ci.org/epccs/Irrigate7.svg?branch=master)](https://travis-ci.org/epccs/Irrigate7)
 
 ![Status](./Hardware/status_icon.png "Status")

@@ -1,0 +1,234 @@
+Using three Orbit 58874N valves
+Location: SxSWEncl (S by SW enclosure)
+RPUadpt^5 at address '1', 
+Irrigate7^5 with KNL with these eeprom settings
+changes from RPUno test: the wires are fliped K1 is on K7, K2 is on K6, K3 is on K5.
+
+# load Solenoid settings and save to eeprom
+/1/kpre 7,1
+{"K7":{"delay_start_sec":"1"}}
+/1/kpre 6,600
+{"K6":{"delay_start_sec":"600"}}
+/1/kpre 5,1200
+{"K5":{"delay_start_sec":"1200"}}
+/1/krunt 7,150
+{"K7":{"runtime_sec":"150",}}
+/1/krunt 6,150
+{"K6":{"runtime_sec":"150",}}
+/1/krunt 5,150
+{"K5":{"runtime_sec":"150",}}
+/1/kdelay 7,3450
+{"K7":{"delay_sec":"3450"}}
+/1/kdelay 6,3450
+{"K6":{"delay_sec":"3450"}}
+/1/kdelay 5,3450
+{"K5":{"delay_sec":"3450"}}
+/1/ksave 7,10
+{"K7":{"delay_start_sec":"1","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
+/1/ksave 6,10
+{"K6":{"delay_start_sec":"600","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
+/1/ksave 5,10
+{"K5":{"delay_start_sec":"1200","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
+
+# load LED settings and save to eeprom
+/1/preled 1,1
+{"LED1":{"delay_start_sec":"1"}}
+/1/preled 2,3
+{"LED2":{"delay_start_sec":"3"}}
+/1/preled 3,5
+{"LED3":{"delay_start_sec":"5"}}
+/1/preled 4,7
+{"LED4":{"delay_start_sec":"7"}}
+/1/runtimeled 1,4
+{"LED1":{"runtime_sec":"4"}}
+/1/runtimeled 2,5
+{"LED2":{"runtime_sec":"5"}}
+/1/runtimeled 3,4
+{"LED3":{"runtime_sec":"4"}}
+/1/runtimeled 4,5
+{"LED4":{"runtime_sec":"5"}}
+/1/delayled 1,2
+{"LED1":{"delay_sec":"2"}}
+/1/delayled 2,2
+{"LED2":{"delay_sec":"2"}}
+/1/delayled 3,2
+{"LED3":{"delay_sec":"2"}}
+/1/delayled 4,2
+{"LED4":{"delay_sec":"2"}}
+/1/mahrled 1,400
+{"LED1":{"mahr_stop":"400"}}
+/1/mahrled 2,600
+{"LED2":{"mahr_stop":"600"}}
+/1/mahrled 3,800
+{"LED3":{"mahr_stop":"800"}}
+/1/mahrled 4,1000
+{"LED4":{"mahr_stop":"1000"}}
+/1/saveled 1,5000
+{"LED1":{"delay_start_sec":"1","runtime_sec":"4","delay_sec":"2","mahr_stop":"400","cycles":"5000"}}
+/1/saveled 2,5000
+{"LED2":{"delay_start_sec":"3","runtime_sec":"5","delay_sec":"2","mahr_stop":"600","cycles":"5000"}}
+/1/saveled 3,5000
+{"LED3":{"delay_start_sec":"5","runtime_sec":"4","delay_sec":"2","mahr_stop":"800","cycles":"5000"}}
+/1/saveled 4,5000
+{"LED4":{"delay_start_sec":"7","runtime_sec":"5","delay_sec":"2","mahr_stop":"1000","cycles":"5000"}}
+
+# check the eeprom settings
+/1/kload 7
+{"K7":{"delay_start_sec":"1","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
+/1/kload 6
+{"K6":{"delay_start_sec":"600","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
+/1/kload 5
+{"K5":{"delay_start_sec":"1200","runtime_sec":"150","delay_sec":"3450","cycles":"10"}}
+/1/loadled 1
+{"LED1":{"delay_start_sec":"1","runtime_sec":"4","delay_sec":"2","mahr_stop":"400","cycles":"5000"}}
+/1/loadled 2
+{"LED2":{"delay_start_sec":"3","runtime_sec":"5","delay_sec":"2","mahr_stop":"600","cycles":"5000"}}
+/1/loadled 3
+{"LED3":{"delay_start_sec":"5","runtime_sec":"4","delay_sec":"2","mahr_stop":"800","cycles":"5000"}}
+/1/loadled 4
+{"LED4":{"delay_start_sec":"7","runtime_sec":"5","delay_sec":"2","mahr_stop":"1000","cycles":"5000"}}
+
+1/18/2019:15:10 after install
+/1/kflow? 7
+{"K7":{"cycle_state":"0","cycles":"0","flow_cnt":"87"}}
+/1/ktime? 7
+{"K7":{"cycle_state":"0","cycles":"0","cycle_millis":"1000"}}
+/1/kflow? 6
+{"K6":{"cycle_state":"0","cycles":"0","flow_cnt":"93"}}
+/1/ktime? 6
+{"K6":{"cycle_state":"0","cycles":"0","cycle_millis":"1000"}}
+/1/kflow? 5
+{"K5":{"cycle_state":"0","cycles":"0","flow_cnt":"99"}}
+/1/ktime? 5
+{"K5":{"cycle_state":"0","cycles":"0","cycle_millis":"1000"}}
+/1/led? 1
+{"LED1":{"cycle_state":"0","cycles":"0","cycle_millis":"1000"}}
+/1/led? 2
+{"LED2":{"cycle_state":"0","cycles":"0","cycle_millis":"1000"}}
+/1/led? 3
+{"LED3":{"cycle_state":"0","cycles":"0","cycle_millis":"1000"}}
+/1/led? 4
+{"LED4":{"cycle_state":"0","cycles":"0","cycle_millis":"1000"}}
+/1/altcnt?
+{"alt_count":"0"}
+/1/charge?
+{"CHRG_mAHr":"3.23","ACCUM_Sec":"264.42"}
+/1/analog? 7,6,0
+{"PWR_V":"13.06","PWR_I":"0.042","ADC0":"1.69"}
+
+1/19/2019:20:04 night
+/1/kflow? 7
+{"K7":{"cycle_state":"0","cycles":"0","flow_cnt":"1291"}}
+/1/ktime? 7
+{"K7":{"cycle_state":"0","cycles":"0","cycle_millis":"1500000"}}
+/1/kflow? 6
+{"K6":{"cycle_state":"0","cycles":"0","flow_cnt":"11991"}}
+/1/ktime? 6
+{"K6":{"cycle_state":"0","cycles":"0","cycle_millis":"1500000"}}
+/1/kflow? 5
+{"K5":{"cycle_state":"0","cycles":"0","flow_cnt":"16626"}}
+/1/ktime? 5
+{"K5":{"cycle_state":"0","cycles":"0","cycle_millis":"1500000"}}
+/1/led? 1
+{"LED1":{"cycle_state":"0","cycles":"0","cycle_millis":"2000"}}
+/1/led? 2
+{"LED2":{"cycle_state":"0","cycles":"0","cycle_millis":"2000"}}
+/1/led? 3
+{"LED3":{"cycle_state":"0","cycles":"0","cycle_millis":"2000"}}
+/1/led? 4
+{"LED4":{"cycle_state":"0","cycles":"0","cycle_millis":"2000"}}
+/1/altcnt?
+{"alt_count":"21"}
+/1/charge?
+{"CHRG_mAHr":"402.76","ACCUM_Sec":"45706.72"}
+/1/analog? 7,6,0
+{"PWR_V":"12.99","PWR_I":"0.023","ADC0":"0.03"}
+
+1/20/2019:19:54 night
+/1/kflow? 7
+{"K7":{"cycle_state":"0","cycles":"0","flow_cnt":"2374"}}
+/1/ktime? 7
+{"K7":{"cycle_state":"0","cycles":"0","cycle_millis":"1500000"}}
+/1/kflow? 6
+{"K6":{"cycle_state":"0","cycles":"0","flow_cnt":"12110"}}
+/1/ktime? 6
+{"K6":{"cycle_state":"0","cycles":"0","cycle_millis":"1500000"}}
+/1/kflow? 5
+{"K5":{"cycle_state":"0","cycles":"0","flow_cnt":"16410"}}
+/1/ktime? 5
+{"K5":{"cycle_state":"0","cycles":"0","cycle_millis":"1500000"}}
+/1/led? 1
+{"LED1":{"cycle_state":"0","cycles":"0","cycle_millis":"3000"}}
+/1/led? 2
+{"LED2":{"cycle_state":"0","cycles":"0","cycle_millis":"3000"}}
+/1/led? 3
+{"LED3":{"cycle_state":"0","cycles":"0","cycle_millis":"3000"}}
+/1/led? 4
+{"LED4":{"cycle_state":"0","cycles":"0","cycle_millis":"3000"}}
+/1/altcnt?
+{"alt_count":"37"}
+/1/charge?
+{"CHRG_mAHr":"390.94","ACCUM_Sec":"45024.08"}
+# ADC1 wire to ICP1 (100 Ohm), hall sensor off is 3.6mA, hall on is 14.5mA
+/1/analog? 7,6,0,1
+{"PWR_V":"13.03","PWR_I":"0.029","ADC0":"0.02","ADC1":"0.36"}
+# spin the meter a few times until the sensor is on 
+{"PWR_V":"12.99","PWR_I":"0.037","ADC0":"0.02","ADC1":"1.45"}
+
+1/21/2019:19:15 night, seal on K7 zone replaced
+/1/kflow? 7
+{"K7":{"cycle_state":"0","cycles":"0","flow_cnt":"3927"}}
+/1/ktime? 7
+{"K7":{"cycle_state":"0","cycles":"0","cycle_millis":"1500000"}}
+/1/kflow? 6
+{"K6":{"cycle_state":"0","cycles":"0","flow_cnt":"12001"}}
+/1/ktime? 6
+{"K6":{"cycle_state":"0","cycles":"0","cycle_millis":"1500000"}}
+/1/kflow? 5
+{"K5":{"cycle_state":"0","cycles":"0","flow_cnt":"16537"}}
+/1/ktime? 5
+{"K5":{"cycle_state":"0","cycles":"0","cycle_millis":"1500001"}}
+/1/led? 1
+{"LED1":{"cycle_state":"0","cycles":"0","cycle_millis":"4000"}}
+/1/led? 2
+{"LED2":{"cycle_state":"0","cycles":"0","cycle_millis":"4000"}}
+/1/led? 3
+{"LED3":{"cycle_state":"0","cycles":"0","cycle_millis":"4000"}}
+/1/led? 4
+{"LED4":{"cycle_state":"0","cycles":"0","cycle_millis":"4000"}}
+/1/altcnt?
+{"alt_count":"66"}
+/1/charge?
+{"CHRG_mAHr":"391.00","ACCUM_Sec":"42406.18"}
+/1/analog? 7,6,0,1
+{"PWR_V":"13.03","PWR_I":"0.030","ADC0":"0.02","ADC1":"0.36"}
+
+1/22/2019:18:17 evening debounce
+/1/kflow? 7
+{"K7":{"cycle_state":"0","cycles":"0","flow_cnt":"1255"}}
+/1/ktime? 7
+{"K7":{"cycle_state":"0","cycles":"0","cycle_millis":"1500000"}}
+/1/kflow? 6
+{"K6":{"cycle_state":"0","cycles":"0","flow_cnt":"12185"}}
+/1/ktime? 6
+{"K6":{"cycle_state":"0","cycles":"0","cycle_millis":"1500000"}}
+/1/kflow? 5
+{"K5":{"cycle_state":"0","cycles":"0","flow_cnt":"16545"}}
+/1/ktime? 5
+{"K5":{"cycle_state":"0","cycles":"0","cycle_millis":"1500000"}}
+/1/led? 1
+{"LED1":{"cycle_state":"0","cycles":"0","cycle_millis":"4000"}}
+/1/led? 2
+{"LED2":{"cycle_state":"0","cycles":"0","cycle_millis":"4000"}}
+/1/led? 3
+{"LED3":{"cycle_state":"0","cycles":"0","cycle_millis":"4000"}}
+/1/led? 4
+{"LED4":{"cycle_state":"0","cycles":"0","cycle_millis":"4000"}}
+/1/altcnt?
+{"alt_count":"127"}
+/1/charge?
+{"CHRG_mAHr":"357.05","ACCUM_Sec":"39230.84"}
+/1/analog? 7,6,0,1
+{"PWR_V":"13.06","PWR_I":"0.026","ADC0":"0.03","ADC1":"0.36"}
+
+

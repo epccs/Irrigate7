@@ -25,11 +25,11 @@ The old setup had a K3 board and an RPUno.
 
 ![RPUno^9+3Valves](https://raw.githubusercontent.com/epccs/RPUno/master/Hardware/Evaluation/RPUno%5E9%2BK3%5E2%2BRPUadpt%5E5_wValvesLedStringsPvBat.jpg "RPUno^9 and 3 Valves")
 
-Replaced with Irrigate7 which has four unused drivrs in this setup. K1 moved to K7, K2 moved to K6, and K3 moved to K5.
+Replaced with Irrigate7 which has four unused drivers in this setup. K1 moved to K7, K2 moved to K6, and K3 moved to K5.
 
 ![Irrigate7^5 RPUadpt^5 and Valves](./Irrigate7^5+RPUadpt^5_w3ValvesPvBat.jpg "Irrigate7^5 RPUadpt^5 and Valves")
 
-The valves have been operated for about two years with previous versons of K3 and RPUno, they were set and reset ten times each day so that is over 3500 operations each. The coil resistance is about 4.7 Ohm and they are dirven through a CAT5 pair that is less than 4 meters (e.g. 0.19*4 Ohm). They are operating with a pulse voltage of 24VDC from a 2200uF capacitor, so the peak current has been near 3.75A, that is higher than I would like but has been working.
+The valves have been operated for about two years with previous versions of K3 and RPUno, they were set and reset ten times each day so that is over 3500 operations each. The coil resistance is about 4.7 Ohm and they are driven through a CAT5 pair that is less than 4 meters (e.g. 0.19*4 Ohm). They are operating with a pulse voltage of 24VDC from a 2200uF capacitor, so the peak current has been near 3.75A, that is higher than I would like but has been working.
 
 The [Irrigate7^5_log] will be updated as testing continues.
 

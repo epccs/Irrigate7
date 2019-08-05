@@ -22,6 +22,8 @@ It is similar to the [RPUno] but has integrated K7 (which is a scaled up [K3]). 
 
 [Available](https://rpubus.org/Order_Form.html)
 
+![Stock](./Hardware/M_Stock.jpg "Stock")
+
 [![Build Status](https://travis-ci.org/epccs/Irrigate7.svg?branch=master)](https://travis-ci.org/epccs/Irrigate7)
 
 ![Status](./Hardware/status_icon.png "Status")
@@ -34,11 +36,11 @@ Hardware files include schematic, bill of materials, and notes for testing and e
 
 ## Example with RPU BUS 
 
-RPUBUS is a serial bus that allows multiple controller boards to be connected to a host computer serial port. An [RPUpi] shield has a connector for a Pi Zero to act as the host computer, and connect to other boards with a [RPUadpt] shield over a daisy-chain of CAT5 cables. 
+RPUBUS is a serial bus that allows multiple controller boards to be connected to a host computer. An [RPUpi] shield has a connector for a Pi Zero to act as the host computer, and connect to other RPUbus boards with a daisy-chain. 
 
 ![MultiDrop](./Hardware/Documents/MultiDrop.png "RPUno MultiDrop")
 
-The host computer is able to use it's serial UART port with common software (e.g. avrdude, PySerial, picocom...) when communicating with the ATmega1284p. 
+The host computer has a full duplex multi-drop serial link that works with common serial software (e.g., avrdude, Python's PySerial, picocom, and others.) 
 
 
 ## AVR toolchain
@@ -78,35 +80,20 @@ make bootload
 The software is a guide, it is in C because that is my preference for microcontrollers. If you want additional software please add a Github issue to this repository where we can discuss it. 
 
 
-## Continuous Integration
+## Irrigation Valves
 
-Continuous Integration (CI) is the practice of automatically compiling and testing each time the mainline source is updated (e.g. git push). Travis CI is using a version of Ubuntu as there host environment for doing the test build. The build machine allows pulling in any packages I want including the AVR cross compiler. I don't do anything fancy, just run make. A rule like "make test" could be used if the test build machine had hardware connected (e.g. "make bootload" and then "make test") to the machine, but that is not practical in the foreseeable future. This was fairly simple to set up for Travis because the ATmega1284p was in production at the time the Ubuntu toolchain was done.
-
-[https://travis-ci.org/epccs/Irrigate7](https://travis-ci.org/epccs/Irrigate7)
-
-Update: Travis has Ubuntu [Xenial] 16.04.
-
-[Xenial]: https://docs.travis-ci.com/user/reference/xenial/
+The seven half bridges form an H-bridge with a single (common) bridge to direct a pulse of current through the coil in either a set or reset direction that can be used to control seven latching type solenoids. The valve voltage can be selected with software (9V, 12V, 24V). A boost converter draws 300mA from +5V (which is a 1A5 SMPS POL), so it does not disturb the power too much and charges the 2200uF reasonably quick. Once energized the boost SMPS is turned off, and the charge can be directed through one the seven coils in either a set or reset direction. Many latching valves will work with this setup, but try one first and start an issue if you want some help with the research.
 
 
-## Arduino IDE with MightyCore
+## Pull Pulse Solenoids
 
-The Arduino [IDE] can use the [MightyCore] to compile programs, however I use my [core] files (which are C rather than C++), just remember to look at the schematic to see how the microcontroller is connected. I do not use the Arduino IDE or C++ (I am a hardware designer,.and have enough intrest in software to do what I want).
+A latching H-bridge driver is also used to operate Pull Pulse Solenoids.
 
-[IDE]: https://www.arduino.cc/
-[MightyCore]: https://github.com/mcudude/MightyCore
-[core]: https://github.com/epccs/Irrigate7/tree/master/lib
+http://www.deltaww.com/filecenter/Products/download/04/0409/DSML-0224.pdf
 
 
-## Visual Studio Code
+## Flow Meter
 
-VSC is an editor with some IDE features, it is happy with Makefiles. The feature that is driving me to use VSC is [IntelliSense]. It is configured with JSON files in [.vscode]. 
+I suggest using a flow meter with a hall sensor although a variable reluctance pickup with signal conditioner may also work. Wire it like a current loop device with all the returning current going into the 100 Ohm ICP1 sense resistor. When more than 6mA is on the sense resistor, a transistor will pull down the ICP1 pin to measure the flow pulse event. There are many ways to make this work, if you have a flow meter in mind and need some help with the research, then start a Github issue.
 
-[IntelliSense]: https://code.visualstudio.com/docs/editor/intellisense
-[.vscode]: https://github.com/epccs/Irrigate7/tree/master/.vscode
-
-IntelliSense needs access to the toolchain includes. The AVR toolchain has some in avr-libc (/usr/lib/avr/include), and gcc-avr (/usr/lib/gcc/avr/5.4.0/include). So I copy them into a Samba share for VSC to see (e.g. Y:/lib/avr-libc, and Y:/lib/gcc-avr) which is also where I edit the source (e.g. Y:/git/Irrigate7).
-
-VSC is becoming popular Sparkfun has a [tutorial] on how to use it with Arduino's C++ Library (9_9).
-
-[tutorial]: https://learn.sparkfun.com/tutorials/efficient-arduino-programming-with-arduino-cli-and-visual-studio-code/all
+https://github.com/epccs/Document/tree/master/FlowMeter

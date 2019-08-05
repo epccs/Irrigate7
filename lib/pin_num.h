@@ -1,4 +1,4 @@
-/* Irrigate7 (Atmega1284p) DigitalIO Library
+/* DigitalIO Library
  * Copyright (C) 2018 Ronald Sutherland
  *
  * This Library is free software: you can redistribute it and/or modify

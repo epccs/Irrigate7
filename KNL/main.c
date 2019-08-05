@@ -340,8 +340,10 @@ void setup(void)
     // analog reading of 5*5.0/1024.0 is about 0.024V
     // analog reading of 10*5.0/1024.0 is about 0.049V
     // analog reading of 20*5.0/1024.0 is about 0.098V
-    evening_threshold = 10; // SLP003 with 10k and 100k divider
-    morning_threshold = 20;
+    // analog reading of 40*5.0/1024.0 is about 0.195V
+    // analog reading of 80*5.0/1024.0 is about 0.391V
+    evening_threshold = 40; // SLP003 with 10k and 100k divider
+    morning_threshold = 80;
 
     alt_count = 0;
 }

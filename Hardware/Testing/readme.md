@@ -54,9 +54,9 @@ Apply a current limited (20mA) supply set with 5V to the PWR and 0V connector J1
 Apply a current limited (20mA) supply set with 7V to the PWR and 0V connector J1 and verify that the voltage does get through. Adjust the supply so the LED is on and stable and measure voltage, adjust supply to 30V measure input current. 
 
 ```
-{ "LEDON_V":[10.7,],
-  "PWR@7V_mA":[0.2,],
-  "PWR@30V_mA":[1.9,]}
+{ "LEDON_V":[10.7,10.7,10.7,],
+  "PWR@7V_mA":[0.2,0.2,0.2,],
+  "PWR@30V_mA":[1.9,1.9,1.9,]}
 ```
 
 
@@ -67,7 +67,7 @@ Setup a current limited supply with 5V and about 30mA limit. Connect the supply 
 Note: C105 (2200uF) is not on board.
 
 ``` 
-{"BOOST_DISABLED_mA":[0.01,] }
+{"BOOST_DISABLED_mA":[0.01,0.01,0.01,] }
 ``` 
 
 
@@ -76,7 +76,7 @@ Note: C105 (2200uF) is not on board.
 Apply a 30mA current limited 5V source to +5V (J8 pin 4) and source return to 0V (J8 pin 3). Check that the input current is for a blank MCU (e.g. less than 5mA). Turn off the power.
 
 ```
-{ "I_IN_BLANKMCU_mA":[4.5,]}
+{ "I_IN_BLANKMCU_mA":[4.5,5.1,5.5,]}
 ```
 
 Note if the fuse needs set to the factory (OEM) values there is a make rule in the Bootloader folder.
@@ -98,7 +98,7 @@ git clone https://github.com/epccs/Irrigat7
 cd ~/Irrigat7/Bootloader
 ```
 
-Connect a 5V supply with CC mode set at 30mA to the +5V (J8 pin 4) and  0V (J8 pin 3). Connect the ISP tool (J13). The MCU needs its fuses set, so run the Makefile rule to do that. 
+Connect a 5V supply with CC mode set at 40mA to the +5V (J8 pin 4) and  0V (J8 pin 3). Connect the ISP tool (J13). The MCU needs its fuses set, so run the Makefile rule to do that. 
 
 ```
 make fuse
@@ -113,17 +113,17 @@ make isp
 Disconnect the ICSP tool and measure the input current, wait for the power to be settled. Turn off the power.
 
 ```
-{ "I_IN_16MHZ_EXT_CRYST_mA":[23.5,]}
+{ "I_IN_16MHZ_EXT_CRYST_mA":[23.5,26.0,26.0,]}
 ```
 
 
 ## Install SMPS
 
-Install U2 and measure its output voltage and input current with the supply set at 12.8V and a 30mA current limit.
+Install U2 and measure its output voltage and input current with the supply set at 12.8V and a 40mA current limit.
 
 ```
-{ "+5V_V":[5.0001,],
-  "I_IN_@12V8_mA":[13.5,]}
+{ "+5V_V":[5.0001,4.9414,4.9173,],
+  "I_IN_@12V8_mA":[13.5,13.7,13.9,]}
 ```
 
 
@@ -159,19 +159,11 @@ Exit picocom (Cntl^a and Cntl^x). Plug an [RPUadpt] shield with [Remote] firmwar
 [RPUadpt]: https://github.com/epccs/RPUadpt
 [Remote]: https://github.com/epccs/RPUadpt/tree/master/Remote
 
-Connect ICP1 (J8) jumper. Connect the Self Test [Harness] to the UUT. Connect 100 kOhm resistor to both the PV side and BAT side thermistor inputs to simulate room temperature. Connect a 12V SLA battery to the +BAT and -BAT. Connect +PV and -PV to a CC/CV mode supply with CC set at 150mA and  CV set at 0V. Apply power and increase the CV setting to 21V.
+Connect the Self Test [Harness] to the UUT. Set supply 12.8V and a 400mA current limit.
 
 [Harness]: https://raw.githubusercontent.com/epccs/RPUno/master/SelfTest/Setup/SelfTestWiring.png
 
-Once the UUT connects power (battery charged to > 13.1V) check that the VIN pin on the shield has power (this is not tested by the self-test so it has to be done manually).
-
-Measure the +5V supply at J7 pin 6 and pin 5.
-
-```
-{ "+5V":[4.9959,4.9612,] }
-```
-
-Edit the SelfTest main.c such that "#define REF_EXTERN_AVCC 4999700UL" has the correct value for the UUT. Next, run the bootload rule in the Makefile to build and upload the self-test firmware to the UUT.
+Edit the SelfTest main.c such that "#define REF_EXTERN_AVCC 4999700UL" has the correct value for the UUT (see previous test). Next, run the bootload rule in the Makefile to build and upload the self-test firmware to the UUT.
 
 ```
 cd ~Irrigate7/SelfTest

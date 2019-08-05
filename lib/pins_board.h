@@ -1,5 +1,5 @@
 /*
- * Pin definitions for Irrigate7 used with pin_num.h Digital IO library
+ * Pin definitions for Irrigate7 used with Digital IO library
  * Copyright (C) 2018 Ronald Sutherland
  *
  * This Library is free software: you can redistribute it and/or modify

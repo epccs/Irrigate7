@@ -1,20 +1,20 @@
-/*************************************************************************
-
+/*
     AVR Interrupt-Driven UART with stdio redirect
-    Copyright (C) 2016 Ronald Sutherland
+    Copyright (C) 2019 Ronald Sutherland
 
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
+    This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
 
-    For a copy of the GNU General Public License use
-    http://www.gnu.org/licenses/gpl-2.0.html
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
     Hacked from UART library by Andy Gock
     https://github.com/andygock/avr-uart
@@ -22,7 +22,7 @@
     Added Streams from Steve Rodgerson
     https://github.com/hwstar
 
-*************************************************************************/
+*/
 
 #include <stdio.h>
 #include <util/atomic.h>
@@ -175,7 +175,7 @@
 #elif defined(__AVR_ATmega48__) ||defined(__AVR_ATmega88__) || \
     defined(__AVR_ATmega168__) || defined(__AVR_ATmega48P__) || \
     defined(__AVR_ATmega88P__) || defined(__AVR_ATmega168P__) || \
-    defined(__AVR_ATmega328P__) 
+    defined(__AVR_ATmega328P__)
     #define ATMEGA_USART0
     #define UART0_RECEIVE_INTERRUPT   USART_RX_vect
     #define UART0_TRANSMIT_INTERRUPT  USART_UDRE_vect
@@ -269,6 +269,43 @@
     #define UART1_CONTROL  UCSR1B
     #define UART1_DATA     UDR1
     #define UART1_UDRIE    UDRIE1
+#elif defined(__AVR_ATmega328PB__)
+    #define ATMEGA_USART0
+    #define ATMEGA_USART1
+    #define UART0_RECEIVE_INTERRUPT   USART0_RX_vect
+    #define UART1_RECEIVE_INTERRUPT   USART1_RX_vect
+    #define UART0_TRANSMIT_INTERRUPT  USART0_UDRE_vect
+    #define UART1_TRANSMIT_INTERRUPT  USART1_UDRE_vect
+    #define UART0_STATUS   UCSR0A
+    #define UART0_CONTROL  UCSR0B
+    #define UART0_DATA     UDR0
+    #define UART0_UDRIE    UDRIE0
+    #define UART1_STATUS   UCSR1A
+    #define UART1_CONTROL  UCSR1B
+    #define UART1_DATA     UDR1
+    #define UART1_UDRIE    UDRIE1
+#elif defined(__AVR_ATmega324PB__)
+    #define ATMEGA_USART0
+    #define ATMEGA_USART1
+    #define ATMEGA_USART2
+    #define UART0_RECEIVE_INTERRUPT   USART0_RX_vect
+    #define UART1_RECEIVE_INTERRUPT   USART1_RX_vect
+    #define UART2_RECEIVE_INTERRUPT   USART2_RX_vect
+    #define UART0_TRANSMIT_INTERRUPT  USART0_UDRE_vect
+    #define UART1_TRANSMIT_INTERRUPT  USART1_UDRE_vect
+    #define UART2_TRANSMIT_INTERRUPT  USART2_UDRE_vect
+    #define UART0_STATUS   UCSR0A
+    #define UART0_CONTROL  UCSR0B
+    #define UART0_DATA     UDR0
+    #define UART0_UDRIE    UDRIE
+    #define UART1_STATUS   UCSR1A
+    #define UART1_CONTROL  UCSR1B
+    #define UART1_DATA     UDR1
+    #define UART1_UDRIE    UDRIE
+    #define UART2_STATUS   UCSR2A
+    #define UART2_CONTROL  UCSR2B
+    #define UART2_DATA     UDR2
+    #define UART2_UDRIE    UDRIE
 #else
     #error "no UART definition for MCU available"
 #endif
@@ -389,30 +426,46 @@ ISR(UART0_TRANSMIT_INTERRUPT)
     }
 }
 
-// to do: see if it is useful, #include <util/setbaud.h>
 void uart0_init(uint16_t baudrate)
 {
+    /* UART glitch: how to avoid, this is how optiboot does it.
+          UART0_STATUS = _BV(U2X0); //Double speed mode 
+          UART0_CONTROL = _BV(RXEN0) | _BV(TXEN0); // enable TX and RX glitch free
+          UCSR0C = (1<<UCSZ00) | (1<<UCSZ01); // control frame format
+          UBRR0L = (uint8_t)( (F_CPU + BAUD * 4L) / (BAUD * 8L) - 1 );
+    */
+    
     UART0_TxHead = 0;
     UART0_TxTail = 0;
     UART0_RxHead = 0;
     UART0_RxTail = 0;
 
-#if defined( AT90_UART ) 
-    /* set baud rate */
-    UBRR = (uint8_t)baudrate;
-
-    /* enable UART receiver and transmitter and receive complete interrupt */
-    UART0_CONTROL = (1<<RXCIE)|(1<<RXEN)|(1<<TXEN);
-
-#elif defined (ATMEGA_USART)
-    /* Set baud rate */
+//Double speed mode if needed
+#if defined( ATMEGA_USART ) 
     if ( baudrate & 0x8000 ) {
         UART0_STATUS = (1<<U2X);  //Enable 2x speed
         baudrate &= ~0x8000;
     }
-    UBRRH = (uint8_t)(baudrate>>8);
-    UBRRL = (uint8_t) baudrate;
+#elif defined ( ATMEGA_USART0 )
+    if ( baudrate & 0x8000 ) {
+        UART0_STATUS = (1<<U2X0);  //Enable 2x speed
+        baudrate &= ~0x8000;
+    }
+#elif defined ( ATMEGA_UART )
+    if ( baudrate & 0x8000 ) {
+        UART0_STATUS = (1<<U2X);  //Enable 2x speed
+        baudrate &= ~0x8000;
+    }
+#endif
+    
+#if defined( AT90_UART ) 
+    /* enable UART receiver and transmitter and receive complete interrupt */
+    UART0_CONTROL = (1<<RXCIE)|(1<<RXEN)|(1<<TXEN);
 
+    /* set baud rate */
+    UBRR = (uint8_t)baudrate;
+
+#elif defined (ATMEGA_USART)
     /* Enable USART receiver and transmitter and receive complete interrupt */
     UART0_CONTROL = (1<<RXCIE)|(1<<RXEN)|(1<<TXEN);
 
@@ -423,15 +476,11 @@ void uart0_init(uint16_t baudrate)
     UCSRC = (3<<UCSZ0);
 #endif /* defined( URSEL ) */
 
-#elif defined ( ATMEGA_USART0 )
-    /* Set baud rate */
-    if ( baudrate & 0x8000 ) {
-        UART0_STATUS = (1<<U2X0);  //Enable 2x speed
-        baudrate &= ~0x8000;
-    }
-    UBRR0H = (uint8_t)(baudrate>>8);
-    UBRR0L = (uint8_t) baudrate;
+    /* Set ATMEGA_USART baud rate */
+    UBRRH = (uint8_t)(baudrate>>8);
+    UBRRL = (uint8_t) baudrate;
 
+#elif defined ( ATMEGA_USART0 )
     /* Enable USART receiver and transmitter and receive complete interrupt */
     UART0_CONTROL = (1<<RXCIE0)|(1<<RXEN0)|(1<<TXEN0);
 
@@ -442,17 +491,17 @@ void uart0_init(uint16_t baudrate)
     UCSR0C = (3<<UCSZ00);
 #endif /* defined( ATMEGA_USART0 ) */
 
-#elif defined ( ATMEGA_UART )
-    /* set baud rate */
-    if ( baudrate & 0x8000 ) {
-        UART0_STATUS = (1<<U2X);  //Enable 2x speed
-        baudrate &= ~0x8000;
-    }
-    UBRRHI = (uint8_t)(baudrate>>8);
-    UBRR   = (uint8_t) baudrate;
+    /* Set ATMEGA_USART0 baud rate */
+    UBRR0H = (uint8_t)(baudrate>>8);
+    UBRR0L = (uint8_t) baudrate;
 
+#elif defined ( ATMEGA_UART )
     /* Enable UART receiver and transmitter and receive complete interrupt */
     UART0_CONTROL = (1<<RXCIE)|(1<<RXEN)|(1<<TXEN);
+
+    /* set ATMEGA_UART baud rate */
+    UBRRHI = (uint8_t)(baudrate>>8);
+    UBRR   = (uint8_t) baudrate;
 
 #endif  /* defined( ATMEGA_UART ) */
 
@@ -477,26 +526,6 @@ uint16_t uart0_getc(void)
     return (UART0_LastRxError << 8) + data;
 
 } /* uart0_getc */
-
-/*  Return next byte (character) of incoming UART data without removing it 
-     from the ring buffer. */
-uint16_t uart0_peek(void)
-{
-    uint16_t tmptail;
-    uint8_t data;
-
-    if ( UART0_RxHead == UART0_RxTail ) {
-        return UART_NO_DATA;   /* no data available */
-    }
-
-    tmptail = (UART0_RxTail + 1) & UART_RX0_BUFFER_MASK;
-
-    /* get data from receive buffer */
-    data = UART_RxBuf[tmptail];
-
-    return (UART0_LastRxError << 8) + data;
-
-} /* uart0_peek */
 
 void uart0_putc(uint8_t data)
 {
@@ -626,13 +655,11 @@ void uart1_init(uint16_t baudrate)
     UART1_RxHead = 0;
     UART1_RxTail = 0;
 
-    /* Set baud rate */
+    /* Double speed mode if needed */
     if ( baudrate & 0x8000 ) {
         UART1_STATUS = (1<<U2X1);  //Enable 2x speed
         baudrate &= ~0x8000;
     }
-    UBRR1H = (uint8_t)(baudrate>>8);
-    UBRR1L = (uint8_t) baudrate;
 
     /* Enable USART receiver and transmitter and receive complete interrupt */
     UART1_CONTROL = (1<<RXCIE1)|(1<<RXEN1)|(1<<TXEN1);
@@ -643,6 +670,10 @@ void uart1_init(uint16_t baudrate)
 #else
     UCSR1C = (3<<UCSZ10);
 #endif
+
+    /* Set baud rate */
+    UBRR1H = (uint8_t)(baudrate>>8);
+    UBRR1L = (uint8_t) baudrate;
 } /* uart_init */
 
 /* byte from ring buffer */
@@ -665,25 +696,6 @@ uint16_t uart1_getc(void)
     return (UART1_LastRxError << 8) + data;
 
 } /* uart1_getc */
-
-/*next character from UART data without removing it from the ring buffer. */
-uint16_t uart1_peek(void)
-{
-    uint16_t tmptail;
-    uint8_t data;
-
-    if ( UART1_RxHead == UART1_RxTail ) {
-        return UART_NO_DATA;   /* no data available */
-    }
-
-    tmptail = (UART1_RxTail + 1) & UART_RX1_BUFFER_MASK;
-
-    /* get data from receive buffer */
-    data = UART1_RxBuf[tmptail];
-
-    return (UART1_LastRxError << 8) + data;
-
-} /* uart1_peek */
 
 /* write byte to ringbuffer for transmitting via UART */
 void uart1_putc(uint8_t data)
@@ -818,14 +830,11 @@ void uart2_init(uint16_t baudrate)
     UART2_RxHead = 0;
     UART2_RxTail = 0;
 
-
-    /* Set baud rate */
+    /* Double speed mode if needed */
     if ( baudrate & 0x8000 ) {
         UART2_STATUS = (1<<U2X2);  //Enable 2x speed
         baudrate &= ~0x8000;
     }
-    UBRR2H = (uint8_t)(baudrate>>8);
-    UBRR2L = (uint8_t) baudrate;
 
     /* Enable USART receiver and transmitter and receive complete interrupt */
     UART2_CONTROL = (1<<RXCIE2)|(1<<RXEN2)|(1<<TXEN2);
@@ -836,6 +845,10 @@ void uart2_init(uint16_t baudrate)
 #else
     UCSR2C = (3<<UCSZ20);
 #endif
+
+    /* Set baud rate */
+    UBRR2H = (uint8_t)(baudrate>>8);
+    UBRR2L = (uint8_t) baudrate;
 } /* uart_init */
 
 
@@ -859,25 +872,6 @@ uint16_t uart2_getc(void)
     return (UART2_LastRxError << 8) + data;
 
 } /* uart2_getc */
-
-/* returns the next byte of incoming UART data without removing it from the ring buffer */
-uint16_t uart2_peek(void)
-{
-    uint16_t tmptail;
-    uint8_t data;
-
-    if ( UART2_RxHead == UART2_RxTail ) {
-        return UART_NO_DATA;   /* no data available */
-    }
-
-    tmptail = (UART2_RxTail + 1) & UART_RX2_BUFFER_MASK;
-
-    /* get data from receive buffer */
-    data = UART2_RxBuf[tmptail];
-
-    return (UART2_LastRxError << 8) + data;
-
-} /* uart2_peek */
 
 /* write byte to ring buffer for transmitting via UART */
 void uart2_putc(uint8_t data)
@@ -1010,13 +1004,11 @@ void uart3_init(uint16_t baudrate)
     UART3_RxHead = 0;
     UART3_RxTail = 0;
 
-    /* Set baud rate */
+    /* Double speed mode if needed */
     if ( baudrate & 0x8000 ) {
         UART3_STATUS = (1<<U2X3);  //Enable 2x speed
         baudrate &= ~0x8000;
     }
-    UBRR3H = (uint8_t)(baudrate>>8);
-    UBRR3L = (uint8_t) baudrate;
 
     /* Enable USART receiver and transmitter and receive complete interrupt */
     UART3_CONTROL = (1<<RXCIE3)|(1<<RXEN3)|(1<<TXEN3);
@@ -1027,6 +1019,10 @@ void uart3_init(uint16_t baudrate)
 #else
     UCSR3C = (3<<UCSZ30);
 #endif
+
+    /* Set baud rate */
+    UBRR3H = (uint8_t)(baudrate>>8);
+    UBRR3L = (uint8_t) baudrate;
 } /* uart_init */
 
 
@@ -1050,25 +1046,6 @@ uint16_t uart3_getc(void)
     return (UART3_LastRxError << 8) + data;
 
 } /* uart3_getc */
-
-/* returns next byte of incoming UART data without removing it from ring buffer */
-uint16_t uart3_peek(void)
-{
-    uint16_t tmptail;
-    uint8_t data;
-
-    if ( UART3_RxHead == UART3_RxTail ) {
-        return UART_NO_DATA;   /* no data available */
-    }
-
-    tmptail = (UART3_RxTail + 1) & UART_RX3_BUFFER_MASK;
-
-    /* get data from receive buffer */
-    data = UART3_RxBuf[tmptail];
-
-    return (UART3_LastRxError << 8) + data;
-
-} /* uart3_peek */
 
 /* write byte to ringbuffer for transmitting */
 void uart3_putc(uint8_t data)

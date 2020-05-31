@@ -91,6 +91,10 @@ A latching H-bridge driver is also used to operate Pull Pulse Solenoids.
 
 http://www.deltaww.com/filecenter/Products/download/04/0409/DSML-0224.pdf
 
+As well as other bi-stable pulse-operated circuits.
+
+https://www.scoretronics.com/components/Digits_Brochure.pdf
+
 
 ## Flow Meter
 

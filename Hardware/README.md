@@ -63,6 +63,12 @@ Bootloader options include [optiboot] and [xboot].
 ![Status](./status_icon.png "Irrigate7 Status")
 
 ```
+        ^6  Done:
+            WIP: 
+            Todo: Design, Layout, BOM, Review*, Order Boards, Assembly, Testing, Evaluation.
+            *during review the Design may change without changing the revision.
+            replace MC34063 with AL8853, and set up a PWM line so it can boost fast if desired.
+
         ^5  Done: Design, Layout, BOM, Review*, Order Boards, Assembly,
             WIP: Testing,
             Todo: Evaluation.
